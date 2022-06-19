@@ -1,0 +1,19 @@
+Each state will consist of 4 inputs
+    Agent Position (mid point of agent) - (float,float)
+    Speed (velocity) - int (0-top speed of agent)
+    Direction (steering angle)- int (0-359)
+    Distance to borders (contours) - float)
+
+How do I use these values as inputs to the model?
+
+Action space
+    2 variables will be changed. Speed and direction
+    They can also only be changed by the set amount respectively
+        Speed
+            Speed up
+            Slow down
+            Do nothing
+        Direction
+            Turn left
+            Turn right
+            Do nothing

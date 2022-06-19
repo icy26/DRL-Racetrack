@@ -1,0 +1,53 @@
+Environment
+
+    Draw Simple Agent and Simple movement - DONE
+
+    Map a track from image onto pygame screen using OpenCV - DONE
+
+    Use thick border to create a modified track to then find contours using OpenCV to create borders for track - DONE
+
+    Map borders of racetrack to pygame screen - DONE
+
+    Create collision for outside and inside borders - DONE
+
+    Create speed up, slow down and brake mechanics in single direction - DONE
+
+    Steering mechanics for 360 degrees of movement - DONE
+        Uses a general steering angle -> converted to quadrantangle
+        Then uses sin & cos to determine distance to move agent in (x, y) direction
+
+    Added environment info in the form of labels to show live stats - DONE
+
+    Visual aid for direction of agent - DONE
+        Dashed line showing which direction agent is facing
+
+    Start & finish lines
+        Spawn at start
+        Provide reward at finish
+
+    Scoring system
+        Starts at 1000
+        Provisional
+        -0.01 for every ms the car is on track (will force training to finish faster)
+        -10 score for state border is "in collision"
+            (car will not be able to stay out for too long as it will
+            result in really low score/zeroing out (termination))
+
+    Prevent "Back Tracking"
+        This will prevent agent going back on itself
+        Creates an "invisible" border behind itself, so it cannot travel to a point it has already come from
+        Do this by drawing a line from
+            dist agent midpoint to outside border
+            agent midpoint
+            dist agent midpoint to inside border
+        This line will be created anytime x/y changes
+
+
+
+
+
+
+
+
+
+

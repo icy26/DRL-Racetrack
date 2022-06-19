@@ -1,0 +1,39 @@
+1. States
+    Each input will be the state of the agent
+    State will consist of:
+        Position (x,y)
+        Velocity
+        Steering angle
+        Distance to contours (borders)
+
+2. Rewards
+    Agent must receive result based on decision
+    Good:
+        Action which kept it within borders (on track)
+        Action which stopped itself going back on itself (kept going forward)
+            Invisible border will have to be created per state
+            closest_point_to_outside_border <- agent_midpoint -> closest_point_to_inside_border
+            ^NEEDS TESTING^
+    Bad:
+        Touching border - resulting in minus points and ending agent
+        Going back on itself - resulting in minus points and ending agent
+
+3. Output of state
+    2 simultaneous outputs
+
+    1. Velocity
+        Action to speed up (up arrow)
+        or
+        Action to slow down (down arrow)
+        or
+        Action to coast (no up or down key pressed)
+
+    2. Steering angle
+        Action to turn left (left arrow)
+        or
+        Action to turn right (right arrow)
+
+4. Results per training run
+    Reward for
+        Completing track in fastest time
+
