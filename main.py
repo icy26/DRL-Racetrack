@@ -16,6 +16,8 @@ steeringangle = 0
 quadrantangle = 0
 quadrant = 0
 
+score = 1000
+
 def get_borders():
     img = cv2.imread('thicc silverstone unfilled.png')
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -231,10 +233,13 @@ def draw_direction_line(surf, start_pos, quad, angle):
         end = (round(x2), round(y2))
         pygame.draw.line(surf, (0, 0, 0), start, end, 1)
 
+def update_score(val):
+    global score
+    score -= val
+    return score
 
 def main():
-
-    global x, y, vel
+    #global x, y, vel, score
 
     #Build Screen
     pygame.init()
@@ -264,6 +269,7 @@ def main():
         quadText = font.render('quadrant: ' + str(quadrant), False, (0, 0, 0))
         xcoord = font.render('x: ' + str(x), False, (0, 0, 0))
         ycoord = font.render('y: ' + str(y), False, (0, 0, 0))
+        scoreCard = font.render('score: ' + str(score), False, (0, 0, 0))
 
         # move
         convert_steeringangle_to_quadrantangle(steeringangle)
@@ -318,10 +324,19 @@ def main():
         draw_direction_line(screen, (x,y), quadrant, quadrantangle)
 
         if check_outer_collision(outsideBorder, carPos) == True:
-            print("outside collision")
+            update_score(10)
+            #print("outside collision")
 
-        if check_inner_collision(insideBorder, carPos) == True:
-            print("insidecollision")
+        elif check_inner_collision(insideBorder, carPos) == True:
+            update_score(10)
+            #print("insidecollision")
+
+        else:
+            update_score(0.1)
+
+        #Terminate when zeroed
+        if score <= 0:
+            running = False
 
         #Env info
         screen.blit(velText, (30, 415))
@@ -330,6 +345,7 @@ def main():
         screen.blit(quadText, (30, 460))
         screen.blit(xcoord, (30, 475))
         screen.blit(ycoord, (30, 490))
+        screen.blit(scoreCard, (30, 505))
 
         pygame.display.update()
 
