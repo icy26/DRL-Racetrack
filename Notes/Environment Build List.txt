@@ -22,8 +22,10 @@ Environment
         Dashed line showing which direction agent is facing
 
     Start & finish lines - IN PROGRESS
-        Spawn at start
-        Provide reward at finish
+        Generate start line
+        Spawn at start line
+        Face forward
+        Acknowledge finish
 
     Scoring system - DONE
         Starts at 1000

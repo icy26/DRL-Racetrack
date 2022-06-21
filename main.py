@@ -3,14 +3,18 @@ import numpy as np
 import pygame
 from pygame import gfxdraw
 import math
+import random
+from pygame.draw_py import Point
+from scipy.spatial import distance
 
 #Static Variables
-RED = (255,0,0)
+RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+GREEN = (60, 255, 0)
 
 #Mutable Variables
-x = 125
-y = 200
+x = 0
+y = 0
 vel = 0
 steeringangle = 0
 quadrantangle = 0
@@ -238,6 +242,31 @@ def update_score(val):
     score -= val
     return score
 
+def generate_start(out_ctr, in_ctr):
+    #Picks random point from outside border
+    rng = out_ctr.shape[0]
+    index = random.randint(0, rng)
+    coord = out_ctr[index]
+    xa, ya = coord[0], coord[1]
+    #print('xa: '+ str(xa) +' ya: '+ str(ya))
+
+    #Finds closest point from inside border
+    node = np.array([xa, ya])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    xb, yb = in_ctr[closest_index][0], in_ctr[closest_index][1]
+    #print('xb: ' + str(xb) + ' yb: ' + str(yb))
+
+    return [(xa, ya), (xb, yb)]
+
+def spawn(coords):
+    global x, y
+    p1 = coords[0]
+    p2 = coords[1]
+
+    #return Point((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    x = (p1[0] + p2[0]) / 2
+    y = (p1[1] + p2[1]) / 2
+
 def main():
     #global x, y, vel, score
 
@@ -256,6 +285,12 @@ def main():
     borders = get_borders()
     outsideBorder = borders[0]
     insideBorder = borders[1]
+
+    #Get start line coordinates
+    startCoords = generate_start(outsideBorder, insideBorder)
+
+    #Get Spawn location for agent based on midpoint of startCoords
+    spawn(startCoords)
 
     font = pygame.font.SysFont('Comic Sans', 15)
 
@@ -317,6 +352,9 @@ def main():
         for pair in insideBorder:
             gfxdraw.pixel(screen, pair[0], pair[1], RED)
 
+        #Draw Start Line
+        pygame.draw.line(screen, GREEN, startCoords[0], startCoords[1])
+
 
         carPos = (x, y)
         pygame.draw.circle(screen, BLUE, carPos, 8)
@@ -335,8 +373,8 @@ def main():
             update_score(0.1)
 
         #Terminate when zeroed
-        if score <= 0:
-            running = False
+        #if score <= 0:
+        #    running = False
 
         #Env info
         screen.blit(velText, (30, 415))
