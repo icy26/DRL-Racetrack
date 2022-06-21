@@ -15,7 +15,6 @@ vel = 0
 steeringangle = 0
 quadrantangle = 0
 quadrant = 0
-
 score = 1000
 
 def get_borders():
@@ -233,6 +232,7 @@ def draw_direction_line(surf, start_pos, quad, angle):
         end = (round(x2), round(y2))
         pygame.draw.line(surf, (0, 0, 0), start, end, 1)
 
+#Subtracts 'val' from the current score
 def update_score(val):
     global score
     score -= val
@@ -324,11 +324,11 @@ def main():
         draw_direction_line(screen, (x,y), quadrant, quadrantangle)
 
         if check_outer_collision(outsideBorder, carPos) == True:
-            update_score(10)
+            update_score(5)
             #print("outside collision")
 
         elif check_inner_collision(insideBorder, carPos) == True:
-            update_score(10)
+            update_score(5)
             #print("insidecollision")
 
         else:

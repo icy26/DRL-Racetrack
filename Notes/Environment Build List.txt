@@ -21,11 +21,11 @@ Environment
     Visual aid for direction of agent - DONE
         Dashed line showing which direction agent is facing
 
-    Start & finish lines
+    Start & finish lines - IN PROGRESS
         Spawn at start
         Provide reward at finish
 
-    Scoring system
+    Scoring system - DONE
         Starts at 1000
         Provisional
         -0.01 for every ms the car is on track (will force training to finish faster)
@@ -33,7 +33,14 @@ Environment
             (car will not be able to stay out for too long as it will
             result in really low score/zeroing out (termination))
 
-    Prevent "Back Tracking"
+    Generate Tracks
+        Currently using one track
+        Implement ways to generate a new irregular shape and perform border algorithm to create a random track
+
+    System to detect borders.
+        Potentially a radarRadar
+
+    Prevent "Back Tracking" - ON HOLD
         This will prevent agent going back on itself
         Creates an "invisible" border behind itself, so it cannot travel to a point it has already come from
         Do this by drawing a line from
@@ -41,6 +48,9 @@ Environment
             agent midpoint
             dist agent midpoint to inside border
         This line will be created anytime x/y changes
+    Will try to implement AI model without the prevention of backtracking.
+    Hoping a low score from back tracking will be enough to realise not to do that.
+    Want the agent to learn itself not to go backwards
 
 
 
