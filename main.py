@@ -267,6 +267,18 @@ def spawn(coords):
     x = (p1[0] + p2[0]) / 2
     y = (p1[1] + p2[1]) / 2
 
+#initialise steering angle
+def face_forward(coords):
+    global x, y, steeringangle
+
+def find_gradient(a,b):
+    changeY = b[1] - a[1]
+    changeX = b[0] - a[0]
+
+    grad = changeY/changeX
+    print(grad)
+
+
 def main():
     #global x, y, vel, score
 
@@ -291,6 +303,8 @@ def main():
 
     #Get Spawn location for agent based on midpoint of startCoords
     spawn(startCoords)
+
+    find_gradient(startCoords[0], startCoords[1])
 
     font = pygame.font.SysFont('Comic Sans', 15)
 
@@ -354,7 +368,6 @@ def main():
 
         #Draw Start Line
         pygame.draw.line(screen, GREEN, startCoords[0], startCoords[1])
-
 
         carPos = (x, y)
         pygame.draw.circle(screen, BLUE, carPos, 8)

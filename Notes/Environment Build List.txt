@@ -39,7 +39,7 @@ Environment
         Currently using one track
         Implement ways to generate a new irregular shape and perform border algorithm to create a random track
 
-    System to detect borders.
+    System to detect borders
         Potentially a radarRadar
 
     Prevent "Back Tracking" - ON HOLD
