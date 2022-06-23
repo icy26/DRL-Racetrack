@@ -4,8 +4,8 @@ import pygame
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
 
-p1 = np.array([200, 200])
-p2 = np.array([400, 400])
+p1 = np.array([200, 400])
+p2 = np.array([400, 200])
 #p2 = np.array([random.randint(250,600), random.randint(250,600)])
 
 #Find gradient - Not used for this method
@@ -25,7 +25,7 @@ def gen_midpoint(a, b):
 #Perpendicular point away from midpoint - outside
 def get_angle(intersection, point2):
     aTemp = generateA(intersection)
-    bTemp = generate_perpendicular(intersection, point2)
+    bTemp= generate_perpendicular(intersection, point2)
 
     a = np.array(aTemp)
     b = np.array(bTemp)
@@ -38,6 +38,13 @@ def get_angle(intersection, point2):
     angleTemp = np.arccos(cosine_angle)
 
     angle = np.degrees(angleTemp)
+
+    #Determine reflex angle
+    if b[0] < i[0]:
+        #reflex TRUE
+        angle = 360 - angle
+
+    print(angle)
 
     return aTemp, bTemp, angle
 
@@ -63,10 +70,8 @@ def generate_perpendicular(point1, point2):
     # randomise direction of perpendicular point
     if random.randint(0, 1) == 0:
         perp = point1 + (20 * b)
-        print("+")
     else:
         perp = point1 - (20 * b)
-        print("-")
 
     return perp
 
@@ -106,7 +111,7 @@ def main():
     screen.fill(background_colour)
 
     midPoint = gen_midpoint(p1, p2)
-    basePoint, perpPoint = get_angle(midPoint, p2)
+    basePoint, perpPoint, steeringangle = get_angle(midPoint, p2)
 
     #perpPoint2 = generate_perpendicular(midPoint, p2)
 
