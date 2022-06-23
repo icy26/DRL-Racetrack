@@ -4,7 +4,6 @@ import pygame
 from pygame import gfxdraw
 import math
 import random
-from pygame.draw_py import Point
 from scipy.spatial import distance
 
 #Static Variables
@@ -64,9 +63,14 @@ def check_outer_collision(border, point):
     radius = 8
 
     if dist > radius:
-        return False
+        #no collision
+        return 0
+    elif dist <= 0:
+        #hard collision - midpoint collision (terminates game)
+        return 1
     else:
-        return True
+        #slight collision - body collision (reduces points)
+        return 2
 
 def check_inner_collision(border, point):
     dist = cv2.pointPolygonTest(border, point, True)
@@ -291,8 +295,6 @@ def get_angle(intersection, point2):
         #reflex TRUE
         angle = 360 - angle
 
-    print(angle)
-
     return angle
 
 # Base point
@@ -321,6 +323,9 @@ def generate_perpendicular(point1, point2):
         perp = point1 - (20 * b)
 
     return perp
+
+#Check finish
+#def finish
 
 
 def main():
@@ -422,14 +427,20 @@ def main():
 
         draw_direction_line(screen, (x,y), quadrant, quadrantangle)
 
-        if check_outer_collision(outsideBorder, carPos) == True:
-            update_score(5)
-            #print("outside collision")
+        outsideCollisionVal = check_outer_collision(outsideBorder, carPos)
+        insideCollisionVal = check_inner_collision(insideBorder, carPos)
 
-        elif check_inner_collision(insideBorder, carPos) == True:
+        if outsideCollisionVal == 1:
+            running = False
+        elif outsideCollisionVal == 2:
             update_score(5)
-            #print("insidecollision")
+        else:
+            update_score(0.1)
 
+        if insideCollisionVal == 1:
+            running = False
+        elif insideCollisionVal == 2:
+            update_score(5)
         else:
             update_score(0.1)
 

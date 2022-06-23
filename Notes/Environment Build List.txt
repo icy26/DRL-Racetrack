@@ -40,7 +40,7 @@ Environment
         Implement ways to generate a new irregular shape and perform border algorithm to create a random track
 
     System to detect borders
-        Potentially a radarRadar
+        Potentially a radar
 
     Prevent "Back Tracking" - ON HOLD
         This will prevent agent going back on itself
