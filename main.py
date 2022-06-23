@@ -258,29 +258,73 @@ def generate_start(out_ctr, in_ctr):
 
     return [(xa, ya), (xb, yb)]
 
-def spawn(coords):
-    global x, y
+def get_spawn(coords):
+    #global x, y
     p1 = coords[0]
     p2 = coords[1]
 
     #return Point((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
-    x = (p1[0] + p2[0]) / 2
-    y = (p1[1] + p2[1]) / 2
+    sx = (p1[0] + p2[0]) / 2
+    sy = (p1[1] + p2[1]) / 2
+
+    return (sx, sy)
 
 #initialise steering angle
-def face_forward(coords):
-    global x, y, steeringangle
+def get_angle(intersection, point2):
+    aTemp = generateA(intersection)
+    bTemp = generate_perpendicular(intersection, point2)
 
-def find_gradient(a,b):
-    changeY = b[1] - a[1]
-    changeX = b[0] - a[0]
+    a = np.array(aTemp)
+    b = np.array(bTemp)
+    i = np.array(intersection)
 
-    grad = changeY/changeX
-    print(grad)
+    ia = a - i
+    ib = b - i
+
+    cosine_angle = np.dot(ia, ib) / (np.linalg.norm(ia) * np.linalg.norm(ib))
+    angleTemp = np.arccos(cosine_angle)
+
+    angle = np.degrees(angleTemp)
+
+    #Determine reflex angle
+    if b[0] < i[0]:
+        #reflex TRUE
+        angle = 360 - angle
+
+    print(angle)
+
+    return angle
+
+# Base point
+def generateA(origin):
+    a = (origin[0], 0)
+    return a
+
+# Perpendicular point
+def generate_perpendicular(point1, point2):
+    # Get point1 -> point2 Vector
+    pVec = point1 - point2
+
+    # Normalize pVec to unit vector
+    norm = pVec / np.linalg.norm(pVec)
+
+    # Perpendicular unit vector
+    b = np.empty_like(norm)
+    b[0] = -norm[1]
+    b[1] = norm[0]
+
+    # get point from origin to perp
+    # randomise direction of perpendicular point
+    if random.randint(0, 1) == 0:
+        perp = point1 + (20 * b)
+    else:
+        perp = point1 - (20 * b)
+
+    return perp
 
 
 def main():
-    #global x, y, vel, score
+    global x, y, steeringangle
 
     #Build Screen
     pygame.init()
@@ -302,9 +346,13 @@ def main():
     startCoords = generate_start(outsideBorder, insideBorder)
 
     #Get Spawn location for agent based on midpoint of startCoords
-    spawn(startCoords)
+    spawn = get_spawn(startCoords)
+    x, y = spawn[0], spawn[1]
 
-    find_gradient(startCoords[0], startCoords[1])
+    #Initialises steeringangle
+    spawn = np.array(spawn)
+    point2 = np.array(startCoords)
+    steeringangle = int(get_angle(spawn, point2[0]))
 
     font = pygame.font.SysFont('Comic Sans', 15)
 

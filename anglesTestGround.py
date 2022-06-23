@@ -4,9 +4,9 @@ import pygame
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
 
-p1 = np.array([200, 400])
-p2 = np.array([400, 200])
-#p2 = np.array([random.randint(250,600), random.randint(250,600)])
+p1 = np.array([200, 200])
+#p2 = np.array([400, 200])
+p2 = np.array([random.randint(250,600), random.randint(250,600)])
 
 #Find gradient - Not used for this method
 def find_gradient(a,b):
@@ -46,7 +46,7 @@ def get_angle(intersection, point2):
 
     print(angle)
 
-    return aTemp, bTemp, angle
+    return a, b, angle
 
 #generates a line from midpoint to top of screen, directly vertically
 def generateA(origin):
