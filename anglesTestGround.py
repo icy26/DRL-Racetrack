@@ -2,48 +2,81 @@ import random
 import numpy as np
 import pygame
 from shapely.geometry import LineString
+import matplotlib.pyplot as plt
 
-#p1, p2 = (100,150), (300, 500)
-p1 = np.array([100, 150])
-p2 = np.array([350, 200])
+p1 = np.array([200, 200])
+p2 = np.array([400, 400])
+#p2 = np.array([random.randint(250,600), random.randint(250,600)])
 
 #Find gradient - Not used for this method
-#def find_gradient(a,b):
-#    changeY = b[1] - a[1]
-#    changeX = b[0] - a[0]
-#    grad = changeY/changeX
-#    print(grad)
+def find_gradient(a,b):
+    changeY = b[1] - a[1]
+    changeX = b[0] - a[0]
+    grad = changeY/changeX
+    print(grad)
+    return grad
+
+#gets midpoint of line a->b
+def gen_midpoint(a, b):
+    return (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
 
 #Point A - directly above intersection (length undecided)
 #Intersection - Mid Point of startingline
 #Perpendicular point away from midpoint - outside
-#def get_angle(intersection):
-#    generateA(intersection)
-#    generateB(intersection)
+def get_angle(intersection, point2):
+    aTemp = generateA(intersection)
+    bTemp = generate_perpendicular(intersection, point2)
+
+    a = np.array(aTemp)
+    b = np.array(bTemp)
+    i = np.array(intersection)
+
+    ia = a - i
+    ib = b - i
+
+    cosine_angle = np.dot(ia, ib) / (np.linalg.norm(ia) * np.linalg.norm(ib))
+    angleTemp = np.arccos(cosine_angle)
+
+    angle = np.degrees(angleTemp)
+
+    return aTemp, bTemp, angle
 
 #generates a line from midpoint to top of screen, directly vertically
 def generateA(origin):
     a = (origin[0], 0)
     return a
 
-#chooses one of two perpendicular lines at random
-def generateB(origin, outerPoint):
-    c, d = gen_perp(origin, outerPoint)
-    dup = (c, d)
-    choose = random.randint(0,1)
-    return dup[choose]
+# New Perpendicular method using vectors (numpy). No need for extra library. More legibile
+def generate_perpendicular(point1, point2):
+    # Get point1 -> point2 Vector
+    pVec = point1 - point2
 
-#gets midpoint of line a->b
-def gen_midpoint(a, b):
-    return (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+    # Normalize pVec to unit vector
+    norm = pVec / np.linalg.norm(pVec)
+
+    # Perpendicular unit vector
+    b = np.empty_like(norm)
+    b[0] = -norm[1]
+    b[1] = norm[0]
+
+    # get point from origin to perp
+    # randomise direction of perpendicular point
+    if random.randint(0, 1) == 0:
+        perp = point1 + (20 * b)
+        print("+")
+    else:
+        perp = point1 - (20 * b)
+        print("-")
+
+    return perp
 
 #Perpendicular line - drawn at 'a' for line a->b
 #drawn at midpoint
-#I dont like this method at all - Deprecated methods and importing a whole library for use. Try find a way to use vectors
-def gen_perp(a, b):
+#I dont like this method at all (long & unintelligible) - Deprecated methods and importing a whole library for use. Try find a way to use vectors
+def gen_perp_old(origin, point2):
     cd_length = 60
 
-    ab = LineString([a, b])
+    ab = LineString([point2, origin])
     left = ab.parallel_offset(cd_length / 2, 'left')
     right = ab.parallel_offset(cd_length / 2, 'right')
     c = left.boundary[1]
@@ -52,6 +85,14 @@ def gen_perp(a, b):
     d = (d.x, d.y)
 
     return c, d
+
+#chooses one of two perpendicular lines at random
+#Unecessary method
+def generateB_old(origin, point2 ):
+    c, d = gen_perp_old(origin, point2)
+    dup = (c, d)
+    choose = random.randint(0,1)
+    return dup[choose]
 
 def main():
     pygame.init()
@@ -65,12 +106,11 @@ def main():
     screen.fill(background_colour)
 
     midPoint = gen_midpoint(p1, p2)
-    basePoint = generateA(midPoint)
-    perpPoint = generateB(p1, midPoint)
+    basePoint, perpPoint = get_angle(midPoint, p2)
 
+    #perpPoint2 = generate_perpendicular(midPoint, p2)
 
     running = True
-
     while running:
 
         ev = pygame.event.get()
@@ -86,7 +126,10 @@ def main():
         pygame.draw.line(screen, (0, 0, 255), midPoint, basePoint)
 
         #second line for getting steering angle. Perpendicular to start line will mimic direction car is facing
-        pygame.draw.line(screen, (0, 0, 0), midPoint, perpPoint)
+        #pygame.draw.line(screen, (0, 0, 0), midPoint, perpPoint)
+        pygame.draw.line(screen, (255, 0, 0), midPoint, perpPoint)
+
+
 
         pygame.display.update()
 
