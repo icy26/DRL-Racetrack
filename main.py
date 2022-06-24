@@ -5,6 +5,7 @@ from pygame import gfxdraw
 import math
 import random
 from scipy.spatial import distance
+from shapely.geometry import Point, Polygon
 
 #Static Variables
 RED = (255, 0, 0)
@@ -19,6 +20,10 @@ steeringangle = 0
 quadrantangle = 0
 quadrant = 0
 score = 1000
+
+startCoords = (0,0)
+finishCoords = (0,0)
+deadzoneCoords = (0,0)
 
 def get_borders():
     img = cv2.imread('thicc silverstone unfilled.png')
@@ -78,9 +83,14 @@ def check_inner_collision(border, point):
     radius = -8
 
     if dist <= radius:
-        return False
+        # no collision
+        return 0
+    elif dist >= 0:
+        # hard collision - midpoint collision (terminates game)
+        return 1
     else:
-        return True
+        # slight collision - body collision (reduces points)
+        return 2
 
 def get_pos():
     pos = pygame.mouse.get_pos()
@@ -111,14 +121,14 @@ def steer_left():
     if steeringangle == 0:
         steeringangle = 359
     else:
-        steeringangle -= 1
+        steeringangle -= 2
 
 def steer_right():
     global steeringangle
     if steeringangle == 359:
         steeringangle = 0
     else:
-        steeringangle += 1
+        steeringangle += 2
 
 def convert_steeringangle_to_quadrantangle(steerangle):
     global quadrantangle, quadrant
@@ -246,21 +256,46 @@ def update_score(val):
     score -= val
     return score
 
-def generate_start(out_ctr, in_ctr):
+def generate_start_finish(out_ctr, in_ctr):
     #Picks random point from outside border
     rng = out_ctr.shape[0]
     index = random.randint(0, rng)
+    print(index)
+
     coord = out_ctr[index]
-    xa, ya = coord[0], coord[1]
-    #print('xa: '+ str(xa) +' ya: '+ str(ya))
+    sx1, sy1 = coord[0], coord[1]
 
     #Finds closest point from inside border
-    node = np.array([xa, ya])
+    node = np.array([sx1, sy1])
     closest_index = distance.cdist([node], in_ctr).argmin()
-    xb, yb = in_ctr[closest_index][0], in_ctr[closest_index][1]
-    #print('xb: ' + str(xb) + ' yb: ' + str(yb))
+    sx2, sy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
 
-    return [(xa, ya), (xb, yb)]
+    startCoordsTemp = [(sx1, sy1), (sx2, sy2)]
+    finishCoordsTemp = generate_finish(out_ctr, in_ctr, index-60)
+    deadZoneCoordsTemp = generate_sf_dead_zone(out_ctr, in_ctr, index-30)
+
+    return startCoordsTemp, finishCoordsTemp, deadZoneCoordsTemp
+
+def generate_finish(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    fx1, fy1 = coord[0], coord[1]
+
+    node = np.array([fx1, fy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    fx2, fy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(fx1, fy1), (fx2, fy2)]
+
+#prevents agent getting to finish by going backwards
+def generate_sf_dead_zone(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    dzx1, dzy1 = coord[0], coord[1]
+
+    node = np.array([dzx1, dzy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    dzx2, dzy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(dzx1, dzy1), (dzx2, dzy2)]
 
 def get_spawn(coords):
     #global x, y
@@ -316,20 +351,28 @@ def generate_perpendicular(point1, point2):
     b[1] = norm[0]
 
     # get point from origin to perp
-    # randomise direction of perpendicular point
-    if random.randint(0, 1) == 0:
-        perp = point1 + (20 * b)
-    else:
-        perp = point1 - (20 * b)
+    # choose point not in deadzone
+    perp = point1 + (10 * b)
+
+    if check_dead_zone(perp):
+        perp = point1 - (10 * b)
 
     return perp
 
 #Check finish
-#def finish
+def check_finish(checkPoint):
+    coords = [finishCoords[0], finishCoords[1], deadzoneCoords[1], deadzoneCoords[0]]
+    finishZone = Polygon(coords)
+    return Point(checkPoint).within(finishZone)
 
+#Check deadzone
+def check_dead_zone(checkPoint):
+    coords = [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]]
+    deadZone = Polygon(coords)
+    return Point(checkPoint).within(deadZone)
 
 def main():
-    global x, y, steeringangle
+    global x, y, steeringangle, startCoords, finishCoords, deadzoneCoords
 
     #Build Screen
     pygame.init()
@@ -348,7 +391,7 @@ def main():
     insideBorder = borders[1]
 
     #Get start line coordinates
-    startCoords = generate_start(outsideBorder, insideBorder)
+    startCoords, finishCoords, deadzoneCoords = generate_start_finish(outsideBorder, insideBorder)
 
     #Get Spawn location for agent based on midpoint of startCoords
     spawn = get_spawn(startCoords)
@@ -362,7 +405,6 @@ def main():
     font = pygame.font.SysFont('Comic Sans', 15)
 
     running = True
-
     while running:
 
         velText = font.render('vel: ' + str(vel), False, (0, 0, 0))
@@ -384,7 +426,8 @@ def main():
                 running = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                get_pos()
+                #check_finish(get_pos())
+                check_dead_zone(get_pos())
 
         keys = pygame.key.get_pressed()
 
@@ -421,6 +464,13 @@ def main():
 
         #Draw Start Line
         pygame.draw.line(screen, GREEN, startCoords[0], startCoords[1])
+        #Draw Finish Line
+        pygame.draw.line(screen, BLUE, finishCoords[0], finishCoords[1])
+        pygame.draw.polygon(screen, BLUE, [finishCoords[0], finishCoords[1], deadzoneCoords[1],deadzoneCoords[0]], 0)
+        #Draw Dead Zone Line
+        pygame.draw.line(screen, RED, deadzoneCoords[0], deadzoneCoords[1])
+        pygame.draw.polygon(screen, RED, [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]], 0)
+
 
         carPos = (x, y)
         pygame.draw.circle(screen, BLUE, carPos, 8)
@@ -431,6 +481,7 @@ def main():
         insideCollisionVal = check_inner_collision(insideBorder, carPos)
 
         if outsideCollisionVal == 1:
+            print("out of bounds")
             running = False
         elif outsideCollisionVal == 2:
             update_score(5)
@@ -438,15 +489,24 @@ def main():
             update_score(0.1)
 
         if insideCollisionVal == 1:
-            running = False
+            print("out of bounds")
+            #running = False
         elif insideCollisionVal == 2:
             update_score(5)
         else:
             update_score(0.1)
 
+        if check_finish(carPos):
+            print("Finish")
+            running = False
+
+        if check_dead_zone(carPos):
+            print("Dead")
+            running = False
+
         #Terminate when zeroed
-        #if score <= 0:
-        #    running = False
+        if score <= 0:
+            running = False
 
         #Env info
         screen.blit(velText, (30, 415))
