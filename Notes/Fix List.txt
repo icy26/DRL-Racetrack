@@ -1,0 +1,5 @@
+
+Problem
+    Agent could potentially jump across entire track if gaps between borders are small enough
+Fix
+    Terminate agent if mid-point hits the border. This allows slight collisions but no possibility of skipping track

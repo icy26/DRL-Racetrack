@@ -3,20 +3,27 @@ import numpy as np
 import pygame
 from pygame import gfxdraw
 import math
+import random
+from scipy.spatial import distance
+from shapely.geometry import Point, Polygon
 
 #Static Variables
-RED = (255,0,0)
+RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+GREEN = (60, 255, 0)
 
 #Mutable Variables
-x = 125
-y = 200
+x = 0
+y = 0
 vel = 0
 steeringangle = 0
 quadrantangle = 0
 quadrant = 0
-
 score = 1000
+
+startCoords = (0,0)
+finishCoords = (0,0)
+deadzoneCoords = (0,0)
 
 def get_borders():
     img = cv2.imread('thicc silverstone unfilled.png')
@@ -61,9 +68,14 @@ def check_outer_collision(border, point):
     radius = 8
 
     if dist > radius:
-        return False
+        #no collision
+        return 0
+    elif dist <= 0:
+        #hard collision - midpoint collision (terminates game)
+        return 1
     else:
-        return True
+        #slight collision - body collision (reduces points)
+        return 2
 
 def check_inner_collision(border, point):
     dist = cv2.pointPolygonTest(border, point, True)
@@ -71,9 +83,14 @@ def check_inner_collision(border, point):
     radius = -8
 
     if dist <= radius:
-        return False
+        # no collision
+        return 0
+    elif dist >= 0:
+        # hard collision - midpoint collision (terminates game)
+        return 1
     else:
-        return True
+        # slight collision - body collision (reduces points)
+        return 2
 
 def get_pos():
     pos = pygame.mouse.get_pos()
@@ -104,14 +121,14 @@ def steer_left():
     if steeringangle == 0:
         steeringangle = 359
     else:
-        steeringangle -= 1
+        steeringangle -= 2
 
 def steer_right():
     global steeringangle
     if steeringangle == 359:
         steeringangle = 0
     else:
-        steeringangle += 1
+        steeringangle += 2
 
 def convert_steeringangle_to_quadrantangle(steerangle):
     global quadrantangle, quadrant
@@ -233,13 +250,129 @@ def draw_direction_line(surf, start_pos, quad, angle):
         end = (round(x2), round(y2))
         pygame.draw.line(surf, (0, 0, 0), start, end, 1)
 
+#Subtracts 'val' from the current score
 def update_score(val):
     global score
     score -= val
     return score
 
+def generate_start_finish(out_ctr, in_ctr):
+    #Picks random point from outside border
+    rng = out_ctr.shape[0]
+    index = random.randint(0, rng)
+    print(index)
+
+    coord = out_ctr[index]
+    sx1, sy1 = coord[0], coord[1]
+
+    #Finds closest point from inside border
+    node = np.array([sx1, sy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    sx2, sy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    startCoordsTemp = [(sx1, sy1), (sx2, sy2)]
+    finishCoordsTemp = generate_finish(out_ctr, in_ctr, index-60)
+    deadZoneCoordsTemp = generate_sf_dead_zone(out_ctr, in_ctr, index-30)
+
+    return startCoordsTemp, finishCoordsTemp, deadZoneCoordsTemp
+
+def generate_finish(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    fx1, fy1 = coord[0], coord[1]
+
+    node = np.array([fx1, fy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    fx2, fy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(fx1, fy1), (fx2, fy2)]
+
+#prevents agent getting to finish by going backwards
+def generate_sf_dead_zone(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    dzx1, dzy1 = coord[0], coord[1]
+
+    node = np.array([dzx1, dzy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    dzx2, dzy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(dzx1, dzy1), (dzx2, dzy2)]
+
+def get_spawn(coords):
+    #global x, y
+    p1 = coords[0]
+    p2 = coords[1]
+
+    #return Point((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+    sx = (p1[0] + p2[0]) / 2
+    sy = (p1[1] + p2[1]) / 2
+
+    return (sx, sy)
+
+#initialise steering angle
+def get_angle(intersection, point2):
+    aTemp = generateA(intersection)
+    bTemp = generate_perpendicular(intersection, point2)
+
+    a = np.array(aTemp)
+    b = np.array(bTemp)
+    i = np.array(intersection)
+
+    ia = a - i
+    ib = b - i
+
+    cosine_angle = np.dot(ia, ib) / (np.linalg.norm(ia) * np.linalg.norm(ib))
+    angleTemp = np.arccos(cosine_angle)
+
+    angle = np.degrees(angleTemp)
+
+    #Determine reflex angle
+    if b[0] < i[0]:
+        #reflex TRUE
+        angle = 360 - angle
+
+    return angle
+
+# Base point
+def generateA(origin):
+    a = (origin[0], 0)
+    return a
+
+# Perpendicular point
+def generate_perpendicular(point1, point2):
+    # Get point1 -> point2 Vector
+    pVec = point1 - point2
+
+    # Normalize pVec to unit vector
+    norm = pVec / np.linalg.norm(pVec)
+
+    # Perpendicular unit vector
+    b = np.empty_like(norm)
+    b[0] = -norm[1]
+    b[1] = norm[0]
+
+    # get point from origin to perp
+    # choose point not in deadzone
+    perp = point1 + (10 * b)
+
+    if check_dead_zone(perp):
+        perp = point1 - (10 * b)
+
+    return perp
+
+#Check finish
+def check_finish(checkPoint):
+    coords = [finishCoords[0], finishCoords[1], deadzoneCoords[1], deadzoneCoords[0]]
+    finishZone = Polygon(coords)
+    return Point(checkPoint).within(finishZone)
+
+#Check deadzone
+def check_dead_zone(checkPoint):
+    coords = [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]]
+    deadZone = Polygon(coords)
+    return Point(checkPoint).within(deadZone)
+
 def main():
-    #global x, y, vel, score
+    global x, y, steeringangle, startCoords, finishCoords, deadzoneCoords
 
     #Build Screen
     pygame.init()
@@ -257,10 +390,21 @@ def main():
     outsideBorder = borders[0]
     insideBorder = borders[1]
 
+    #Get start line coordinates
+    startCoords, finishCoords, deadzoneCoords = generate_start_finish(outsideBorder, insideBorder)
+
+    #Get Spawn location for agent based on midpoint of startCoords
+    spawn = get_spawn(startCoords)
+    x, y = spawn[0], spawn[1]
+
+    #Initialises steeringangle
+    spawn = np.array(spawn)
+    point2 = np.array(startCoords)
+    steeringangle = int(get_angle(spawn, point2[0]))
+
     font = pygame.font.SysFont('Comic Sans', 15)
 
     running = True
-
     while running:
 
         velText = font.render('vel: ' + str(vel), False, (0, 0, 0))
@@ -282,7 +426,8 @@ def main():
                 running = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                get_pos()
+                #check_finish(get_pos())
+                check_dead_zone(get_pos())
 
         keys = pygame.key.get_pressed()
 
@@ -317,22 +462,48 @@ def main():
         for pair in insideBorder:
             gfxdraw.pixel(screen, pair[0], pair[1], RED)
 
+        #Draw Start Line
+        pygame.draw.line(screen, GREEN, startCoords[0], startCoords[1])
+        #Draw Finish Line
+        pygame.draw.line(screen, BLUE, finishCoords[0], finishCoords[1])
+        pygame.draw.polygon(screen, BLUE, [finishCoords[0], finishCoords[1], deadzoneCoords[1],deadzoneCoords[0]], 0)
+        #Draw Dead Zone Line
+        pygame.draw.line(screen, RED, deadzoneCoords[0], deadzoneCoords[1])
+        pygame.draw.polygon(screen, RED, [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]], 0)
+
 
         carPos = (x, y)
         pygame.draw.circle(screen, BLUE, carPos, 8)
 
         draw_direction_line(screen, (x,y), quadrant, quadrantangle)
 
-        if check_outer_collision(outsideBorder, carPos) == True:
-            update_score(10)
-            #print("outside collision")
+        outsideCollisionVal = check_outer_collision(outsideBorder, carPos)
+        insideCollisionVal = check_inner_collision(insideBorder, carPos)
 
-        elif check_inner_collision(insideBorder, carPos) == True:
-            update_score(10)
-            #print("insidecollision")
-
+        if outsideCollisionVal == 1:
+            print("out of bounds")
+            running = False
+        elif outsideCollisionVal == 2:
+            update_score(5)
         else:
             update_score(0.1)
+
+        if insideCollisionVal == 1:
+            #Terminate when agent leaves track
+            print("Out of Bounds")
+            #running = False
+        elif insideCollisionVal == 2:
+            update_score(5)
+        else:
+            update_score(0.1)
+
+        if check_finish(carPos):
+            print("Finish")
+            running = False
+
+        if check_dead_zone(carPos):
+            print("Dead")
+            running = False
 
         #Terminate when zeroed
         if score <= 0:

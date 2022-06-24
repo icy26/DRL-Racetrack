@@ -21,11 +21,14 @@ Environment
     Visual aid for direction of agent - DONE
         Dashed line showing which direction agent is facing
 
-    Start & finish lines
-        Spawn at start
-        Provide reward at finish
+    Start & finish lines - DONE
+        Generate start line
+        Spawn at start line
+        Face forward
+        Acknowledge finish
+        "Deadzone" so agent cannot finish the wrong way
 
-    Scoring system
+    Scoring system - DONE
         Starts at 1000
         Provisional
         -0.01 for every ms the car is on track (will force training to finish faster)
@@ -33,7 +36,31 @@ Environment
             (car will not be able to stay out for too long as it will
             result in really low score/zeroing out (termination))
 
-    Prevent "Back Tracking"
+    Generate Tracks
+        Currently using one track
+        Implement ways to generate a new irregular shape and perform border algorithm to create a random track
+
+    System to detect borders
+        Potentially a radar (expanding circle based)
+            Circle of fixed radius, origin at agent midpoint
+                Obtains all border coordinates within the radius of the circle
+                Generate vectors from origin to each point detected.
+            Potential Problems
+                1. Number of points detected will be different at each state. Will this have an effect on input data set
+                2. Detects Points which are not relevant. Eg if track border from different part of track is close by this would be fed in.
+
+            Potential Fix
+                1. Provide only few points that circle (radar) hits (eg 8, 16) so data set is always same size.
+
+        Simpler radar (8 point radar)
+            8 lines originating from midpoint of agent at every 45degrees
+                Expand till a point on border is hit
+                Or until the radar distance is maxed
+            Origin -> Coordinates converted to vectors
+            Any line which didn't hit a border gets an empty vector (value may change based on training)
+
+
+    Prevent "Back Tracking" - ON HOLD   (Potentially unnecessary)
         This will prevent agent going back on itself
         Creates an "invisible" border behind itself, so it cannot travel to a point it has already come from
         Do this by drawing a line from
@@ -41,6 +68,9 @@ Environment
             agent midpoint
             dist agent midpoint to inside border
         This line will be created anytime x/y changes
+    Will try to implement AI model without the prevention of backtracking.
+    Hoping a low score from back tracking will be enough to realise not to do that.
+    Want the agent to learn itself not to go backwards
 
 
 
