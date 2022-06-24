@@ -489,7 +489,8 @@ def main():
             update_score(0.1)
 
         if insideCollisionVal == 1:
-            print("out of bounds")
+            #Terminate when agent leaves track
+            print("Out of Bounds")
             #running = False
         elif insideCollisionVal == 2:
             update_score(5)
