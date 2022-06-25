@@ -26,7 +26,7 @@ finishCoords = (0,0)
 deadzoneCoords = (0,0)
 
 def get_borders():
-    img = cv2.imread('thicc silverstone unfilled.png')
+    img = cv2.imread('Images/thicc silverstone unfilled.png')
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     _, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
@@ -472,13 +472,13 @@ def main():
         pygame.draw.polygon(screen, RED, [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]], 0)
 
 
-        carPos = (x, y)
-        pygame.draw.circle(screen, BLUE, carPos, 8)
+        agentPos = (x, y)
+        pygame.draw.circle(screen, BLUE, agentPos, 8)
 
         draw_direction_line(screen, (x,y), quadrant, quadrantangle)
 
-        outsideCollisionVal = check_outer_collision(outsideBorder, carPos)
-        insideCollisionVal = check_inner_collision(insideBorder, carPos)
+        outsideCollisionVal = check_outer_collision(outsideBorder, agentPos)
+        insideCollisionVal = check_inner_collision(insideBorder, agentPos)
 
         if outsideCollisionVal == 1:
             print("out of bounds")
@@ -497,11 +497,11 @@ def main():
         else:
             update_score(0.1)
 
-        if check_finish(carPos):
+        if check_finish(agentPos):
             print("Finish")
             running = False
 
-        if check_dead_zone(carPos):
+        if check_dead_zone(agentPos):
             print("Dead")
             running = False
 
