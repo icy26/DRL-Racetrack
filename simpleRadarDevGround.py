@@ -12,17 +12,33 @@
     #5. Vector injected to input matrix
         #Where at 0, 45, 90, 135, 180 degrees maps to inputmatrix[0], [1], [2], [3], [4] respectively
 
+import numpy as np
 import pygame
 from pygame import gfxdraw
 import world
-import time
 
 BLACK = (0,0,0)
 BLUE = (0,0,255)
+RED = (255,0,0)
 
 agentPos = (70, 310)
+steeringangle = 120
 
-steeringangle = 0
+
+def test_array():
+    bigArr = np.array([[1, 2], [1, 3], [2, 5], [4, 10]])
+    sinArr = np.array([4, 10])
+    sinArr2 = (2, 3)
+
+    print(bigArr)
+
+    #if sinArr in bigArr:
+    #    print("TRUE")
+
+    if any(np.equal(bigArr, sinArr2).all(1)):
+        print("TRUE")
+    else:
+        print("FALSE")
 
 def main():
 
@@ -41,6 +57,9 @@ def main():
 
         quadrantangle, quadrant = world.convert_steeringangle_to_quadrantangle(steeringangle)
 
+        radarEndPoints = world.radar_pulse(screen, agentPos, steeringangle)
+        tests = world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
+
         running = True
         while running:
 
@@ -53,8 +72,9 @@ def main():
                     running = False
 
                 if event.type == pygame.MOUSEBUTTONUP:
-                    world.get_pos()
-
+                    for test in tests:
+                        if test != None:
+                            pygame.draw.circle(screen, RED, test, 2)
 
             # Draw Borders
             for pair in outsideBorder:
@@ -66,11 +86,9 @@ def main():
             pygame.draw.circle(screen, BLUE, agentPos, 8)
             world.draw_direction_line(screen, agentPos, quadrantangle, quadrant)
 
-            radarEndPoints = world.radar_pulse(agentPos, steeringangle)
-            world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
-
             pygame.display.update()
 
 
 if __name__ == '__main__':
     main()
+    #test_array()
