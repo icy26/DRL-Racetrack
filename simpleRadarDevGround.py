@@ -58,7 +58,8 @@ def main():
         quadrantangle, quadrant = world.convert_steeringangle_to_quadrantangle(steeringangle)
 
         radarEndPoints = world.radar_pulse(screen, agentPos, steeringangle)
-        tests = world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
+        detectedPoints = world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
+        detectedVectors = world.convert_detected_points_to_vector(agentPos, detectedPoints)
 
         running = True
         while running:
@@ -72,9 +73,9 @@ def main():
                     running = False
 
                 if event.type == pygame.MOUSEBUTTONUP:
-                    for test in tests:
-                        if test != None:
-                            pygame.draw.circle(screen, RED, test, 2)
+                    for dPoints in detectedPoints:
+                        if dPoints != None:
+                            pygame.draw.circle(screen, RED, dPoints, 2)
 
             # Draw Borders
             for pair in outsideBorder:

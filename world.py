@@ -4,7 +4,12 @@ import math
 import pygame
 from shapely.geometry import LineString
 
+def get_pos():
+    pos = pygame.mouse.get_pos()
+    print(pos)
+    return (pos)
 
+#region track intialisation
 def get_borders(image):
     img = cv2.imread(image)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -40,12 +45,9 @@ def contours_to_array(contours):
         j = j + 1
 
     return cntOuter2, cntInner2
+#endregion
 
-def get_pos():
-    pos = pygame.mouse.get_pos()
-    print(pos)
-    return (pos)
-
+#region angles+quadrants
 def convert_steeringangle_to_quadrantangle(steerangle):
     #global quadrantangle, quadrant
     if 0 <= steerangle < 90:
@@ -137,14 +139,16 @@ def draw_direction_line(surf, startpos, quadangle, quad):
         start = (round(x1), round(y1))
         end = (round(x2), round(y2))
         pygame.draw.line(surf, (0, 0, 0), start, end, 1)
+#endregion
 
+#region radar
 def radar_pulse(surf, agentpos, steerangle):
     radarlength = 120
 
     #point1 @ 0 degree from steering angle
     quadangle, quad = convert_steeringangle_to_quadrantangle(steerangle)
     endpos1 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    pygame.draw.line(surf, (255,0,0), agentpos, endpos1)
+    #pygame.draw.line(surf, (255,0,0), agentpos, endpos1)
 
     #point2 @ -45 degrees from steering angle
     if steerangle < 45:
@@ -153,7 +157,7 @@ def radar_pulse(surf, agentpos, steerangle):
         point2angle = steerangle - 45
     quadangle, quad = convert_steeringangle_to_quadrantangle(point2angle)
     endpos2 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    pygame.draw.line(surf, (255, 0, 0), agentpos, endpos2)
+    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos2)
 
     #point3 @ +45 degrees from steering angle
     if steerangle >= 315:
@@ -162,7 +166,7 @@ def radar_pulse(surf, agentpos, steerangle):
         point3angle = steerangle + 45
     quadangle, quad = convert_steeringangle_to_quadrantangle(point3angle)
     endpos3 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    pygame.draw.line(surf, (255, 0, 0), agentpos, endpos3)
+    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos3)
 
     #point 4 @ -90 degrees from steering angle
     if steerangle < 90:
@@ -171,7 +175,7 @@ def radar_pulse(surf, agentpos, steerangle):
         point4angle = steerangle - 90
     quadangle, quad = convert_steeringangle_to_quadrantangle(point4angle)
     endpos4 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    pygame.draw.line(surf, (255, 0, 0), agentpos, endpos4)
+    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos4)
 
     # point 5 @ +90 degrees from steering angle
     if steerangle >= 250:
@@ -180,7 +184,7 @@ def radar_pulse(surf, agentpos, steerangle):
         point5angle = steerangle + 90
     quadangle, quad = convert_steeringangle_to_quadrantangle(point5angle)
     endpos5 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    pygame.draw.line(surf, (255, 0, 0), agentpos, endpos5)
+    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos5)
 
     radarEndPoints = (endpos1, endpos2, endpos3, endpos4, endpos5)
 
@@ -225,6 +229,25 @@ def get_points_on_line(startpos, endpos, outsideBorder, insideBorder):
             return pArr
 
     return None
+
+def convert_detected_points_to_vector(agentpos, dectectedpoints):
+    detectedVectors = np.zeros((5,2), dtype=int)
+
+    i = 0
+    for dPoint in dectectedpoints:
+        if dPoint != None:
+            dNPoint = np.array(dPoint)
+            dVector = agentpos - dNPoint
+            detectedVectors[i] = dVector
+        i+=1
+
+    return detectedVectors
+#endregion
+
+
+
+
+
 
 
 
