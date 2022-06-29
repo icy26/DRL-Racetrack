@@ -15,11 +15,14 @@
 import pygame
 from pygame import gfxdraw
 import world
+import time
 
 BLACK = (0,0,0)
 BLUE = (0,0,255)
 
 agentPos = (70, 310)
+
+steeringangle = 0
 
 def main():
 
@@ -36,11 +39,12 @@ def main():
 
         outsideBorder, insideBorder = world.get_borders("Images/circle.png")
 
-
-
+        quadrantangle, quadrant = world.convert_steeringangle_to_quadrantangle(steeringangle)
 
         running = True
         while running:
+
+            #screen.fill(background_colour)
 
             ev = pygame.event.get()
 
@@ -51,6 +55,7 @@ def main():
                 if event.type == pygame.MOUSEBUTTONUP:
                     world.get_pos()
 
+
             # Draw Borders
             for pair in outsideBorder:
                 gfxdraw.pixel(screen, pair[0], pair[1], BLACK)
@@ -59,6 +64,10 @@ def main():
                 gfxdraw.pixel(screen, pair[0], pair[1], BLACK)
 
             pygame.draw.circle(screen, BLUE, agentPos, 8)
+            world.draw_direction_line(screen, agentPos, quadrantangle, quadrant)
+
+            radarEndPoints = world.radar_pulse(agentPos, steeringangle)
+            world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
 
             pygame.display.update()
 
