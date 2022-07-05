@@ -14,7 +14,7 @@ vel = 2
 
 def get_contour():
     #img = cv2.imread('silverstone fill.png')
-    img = cv2.imread('thicc silverstone unfilled.png')
+    img = cv2.imread('racetrack silverstone.png')
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     _, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)

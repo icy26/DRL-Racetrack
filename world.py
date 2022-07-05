@@ -2,7 +2,9 @@ import cv2
 import numpy as np
 import math
 import pygame
-from shapely.geometry import LineString
+import random as rand
+from scipy.spatial import distance
+from shapely.geometry import LineString, Point, Polygon
 
 def get_pos():
     pos = pygame.mouse.get_pos()
@@ -45,11 +47,57 @@ def contours_to_array(contours):
         j = j + 1
 
     return cntOuter2, cntInner2
+
+def generate_start_finish(out_ctr, in_ctr):
+    #Picks random point from outside border
+    rng = out_ctr.shape[0]
+    index = rand.randint(0, rng)
+    coord = out_ctr[index]
+    sx1, sy1 = coord[0], coord[1]
+
+    #Finds closest point from inside border
+    node = np.array([sx1, sy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    sx2, sy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    startCoordsTemp = [(sx1, sy1), (sx2, sy2)]
+    finishCoordsTemp = generate_finish(out_ctr, in_ctr, index-60)
+    deadZoneCoordsTemp = generate_sf_dead_zone(out_ctr, in_ctr, index-30)
+
+    return startCoordsTemp, finishCoordsTemp, deadZoneCoordsTemp
+
+def generate_finish(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    fx1, fy1 = coord[0], coord[1]
+
+    node = np.array([fx1, fy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    fx2, fy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(fx1, fy1), (fx2, fy2)]
+
+def generate_sf_dead_zone(out_ctr, in_ctr, index):
+    coord = out_ctr[index]
+    dzx1, dzy1 = coord[0], coord[1]
+
+    node = np.array([dzx1, dzy1])
+    closest_index = distance.cdist([node], in_ctr).argmin()
+    dzx2, dzy2 = in_ctr[closest_index][0], in_ctr[closest_index][1]
+
+    return [(dzx1, dzy1), (dzx2, dzy2)]
+
+def get_spawn(coords):
+    p1 = coords[0]
+    p2 = coords[1]
+
+    sx = (p1[0] + p2[0]) / 2
+    sy = (p1[1] + p2[1]) / 2
+
+    return (sx, sy)
 #endregion
 
 #region angles+quadrants
 def convert_steeringangle_to_quadrantangle(steerangle):
-    #global quadrantangle, quadrant
     if 0 <= steerangle < 90:
         quadrant = 0
         quadrantangle = 90 - steerangle
@@ -108,7 +156,6 @@ def get_angled_line(startpos, quadangle, quad, linelength):
     return endpos
 
 def draw_direction_line(surf, startpos, quadangle, quad):
-
     x1, y1 = startpos
     x2, y2 = get_angled_line(startpos, quadangle, quad, 60)
 
@@ -139,6 +186,167 @@ def draw_direction_line(surf, startpos, quadangle, quad):
         start = (round(x1), round(y1))
         end = (round(x2), round(y2))
         pygame.draw.line(surf, (0, 0, 0), start, end, 1)
+
+#initialise steering angle
+def initialise_steering_angle(intersection, point2, startCoords, deadzoneCoords):
+    aTemp = (intersection[0], 0)
+    bTemp = generate_perpendicular(intersection, point2, startCoords, deadzoneCoords)
+
+    a = np.array(aTemp)
+    b = np.array(bTemp)
+    i = np.array(intersection)
+
+    ia = a - i
+    ib = b - i
+
+    cosine_angle = np.dot(ia, ib) / (np.linalg.norm(ia) * np.linalg.norm(ib))
+    angleTemp = np.arccos(cosine_angle)
+
+    angle = np.degrees(angleTemp)
+
+    #Determine reflex angle
+    if b[0] < i[0]:
+        #reflex TRUE
+        angle = 360 - angle
+
+    return angle
+
+# Perpendicular point
+def generate_perpendicular(point1, point2, startCoords, deadzoneCoords):
+    # Get point1 -> point2 Vector
+    pVec = point1 - point2
+
+    # Normalize pVec to unit vector
+    norm = pVec / np.linalg.norm(pVec)
+
+    # Perpendicular unit vector
+    b = np.empty_like(norm)
+    b[0] = -norm[1]
+    b[1] = norm[0]
+
+    # get point from origin to perp
+    # choose point not in deadzone
+    perp = point1 + (10 * b)
+
+    if check_dead_zone(perp, startCoords, deadzoneCoords):
+        perp = point1 - (10 * b)
+
+    return perp
+#endregion
+
+#region environment checks
+#Check finish
+def check_finish(checkPoint, finishCoords, deadzoneCoords):
+    coords = [finishCoords[0], finishCoords[1], deadzoneCoords[1], deadzoneCoords[0]]
+    finishZone = Polygon(coords)
+    return Point(checkPoint).within(finishZone)
+
+def check_dead_zone(checkPoint, deadzoneCoords, startCoords):
+    coords = [deadzoneCoords[0], deadzoneCoords[1], startCoords[1], startCoords[0]]
+    deadZone = Polygon(coords)
+    return Point(checkPoint).within(deadZone)
+
+def check_outer_collision(outsideBorder, point):
+    dist = cv2.pointPolygonTest(outsideBorder, point, True)
+
+    radius = 8
+
+    if dist > radius:
+        #no collision
+        return 0
+    elif dist <= 0:
+        #hard collision - midpoint collision (terminates game)
+        return 1
+    else:
+        #slight collision - body collision (reduces points)
+        return 2
+
+def check_inner_collision(insideBorder, point):
+    dist = cv2.pointPolygonTest(insideBorder, point, True)
+
+    radius = -8
+
+    if dist <= radius:
+        # no collision
+        return 0
+    elif dist >= 0:
+        # hard collision - midpoint collision (terminates game)
+        return 1
+    else:
+        # slight collision - body collision (reduces points)
+        return 2
+#endregion
+
+#region movement
+def accelerate(vel):
+    vel += 0.05
+    return vel
+
+def deccelerate(vel):
+    if vel > 0.025:
+        vel -= 0.025
+    else:
+        vel = 0
+    return vel
+
+def brake(vel):
+    if vel > 0.05:
+        vel -= 0.05
+    else:
+        vel = 0
+    return vel
+
+def steer_left(steeringangle):
+    if steeringangle == 0:
+        steeringangle = 359
+    else:
+        steeringangle -= 2
+    return steeringangle
+
+def steer_right(steeringangle):
+    if steeringangle == 359:
+        steeringangle = 0
+    else:
+        steeringangle += 2
+    return steeringangle
+
+def move(x, y, velocity, quadrantangle, quadrant):
+    angleRad = math.radians(quadrantangle)
+
+    #Top right quad (moving north east)
+    if quadrant == 0:
+        hypo = velocity
+        oppo = math.sin(angleRad) * hypo
+        adj = math.cos(angleRad) * hypo
+
+        y -= oppo
+        x += adj
+    # Bottom right quad (moving south east)
+    elif quadrant == 1:
+        hypo = velocity
+        oppo = math.sin(angleRad) * hypo
+        adj = math.cos(angleRad) * hypo
+
+        y += oppo
+        x += adj
+    # Bottom left quad (moving south west)
+    elif quadrant == 2:
+        hypo = velocity
+        oppo = math.sin(angleRad) * hypo
+        adj = math.cos(angleRad) * hypo
+
+        y += oppo
+        x -= adj
+    #Top left quad (moving north west)
+    else:
+        hypo = velocity
+        oppo = math.sin(angleRad) * hypo
+        adj = math.cos(angleRad) * hypo
+
+        y -= oppo
+        x -= adj
+
+    return x, y
 #endregion
 
 #region radar

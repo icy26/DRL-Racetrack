@@ -3,7 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # reading image
-img = cv2.imread('thicc silverstone unfilled.png')
+img = cv2.imread('racetrack silverstone.png')
 
 
 # converting image into grayscale image
