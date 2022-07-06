@@ -3,6 +3,8 @@ from scipy.special import binom
 import matplotlib.pyplot as plt
 import cv2 as cv
 
+import world
+
 bernstein = lambda n, k, t: binom(n,k)* t**k * (1.-t)**(n-k)
 
 def bezier(points, num=200):
@@ -81,7 +83,15 @@ def get_random_points(n=5, scale=0.8, mindst=None, rec=0):
     else:
         return get_random_points(n=n, scale=scale, mindst=mindst, rec=rec+1)
 
-def get_border_one(fName):
+def check_viability(contours):
+    if len(contours) > 3:
+        #track has loops -> discard
+        print("loop occured")
+        execute()
+    else:
+        print("successful track")
+
+def track_gen(fName):
     img = cv.imread(fName)
 
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -89,33 +99,32 @@ def get_border_one(fName):
     contours, _ = cv.findContours(
         threshold, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
-    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 20)
+    check_viability(contours)
+
+    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 40)
 
     cv.imwrite('stage2.png', img)
-    #cv.imshow('OG', img)
-    #cv.waitKey(0)
-    #cv.destroyAllWindows()
 
-
-if __name__ == '__main__':
-    fig, ax = plt.subplots()
-    ax.set_aspect("equal")
-
+def execute():
+    # Tunables ________
     rad = 0.2
     edgy = 0.05
-    n = 10
+    n = 24
     scale = 0.5
+
+    fig, ax = plt.subplots()
+    ax.set_aspect("equal")
+    ax.axis('off')
 
     a = get_random_points(n=n, scale=scale)
     x, y, _ = get_bezier_curve(a, rad=rad, edgy=edgy)
     plt.plot(x, y)
 
-    ax.axis('off')
-
     fig.savefig('stage1.png')
-    # fig.show()
+    track_gen('stage1.png')
 
-    get_border_one('stage1.png')
+if __name__ == '__main__':
+    execute()
 
 
 

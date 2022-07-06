@@ -85,6 +85,14 @@ def get_random_points(n, scale, mindst=None, rec=0):
     else:
         return get_random_points(n=n, scale=scale, mindst=mindst, rec=rec+1)
 
+def check_viability(contours):
+    if len(contours) > 3:
+        #track has loops -> discard
+        print("loop occured")
+        execute()
+    else:
+        print("successful track")
+
 def track_gen(fName):
     img = cv.imread(fName)
 
@@ -93,7 +101,9 @@ def track_gen(fName):
     contours, _ = cv.findContours(
         threshold, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
-    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 40)
+    check_viability(contours)
+
+    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 20)
 
     cv.imwrite('stage2.png', img)
 
@@ -101,8 +111,8 @@ def execute():
     # Tunables ________
     rad = 0.2
     edgy = 0.05
-    n = 10
-    scale = 0.5
+    n = 12
+    scale = 0.8
 
     fig, ax = plt.subplots()
     ax.set_aspect("equal")
