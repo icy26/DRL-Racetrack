@@ -1,6 +1,8 @@
 import pygame
 import numpy as np
 from pygame import gfxdraw
+
+import trackGenerator
 import world
 
 #Static Variables
@@ -26,7 +28,7 @@ def main():
     FONT = pygame.font.SysFont('Comic Sans', 15)
 
     # Converting to less nested array - faster execution
-    borders = world.get_borders("Images/racetrack silverstone.png")
+    borders = world.get_borders("stage3.png")
     outsideBorder = borders[0]
     insideBorder = borders[1]
 
@@ -151,7 +153,7 @@ def main():
         #Terminate when zeroed
         if score <= 0:
             print("Zeroed")
-            running = False
+            #running = False
 
         #Env info _____________
 
@@ -173,4 +175,5 @@ def main():
         pygame.display.update()
 
 if __name__ == '__main__':
+    trackGenerator.execute()
     main()

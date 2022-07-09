@@ -36,11 +36,11 @@ Environment
             (car will not be able to stay out for too long as it will
             result in really low score/zeroing out (termination))
 
-    Generate Tracks
+    Generate Tracks - DONE
         Currently using one track
         Implement ways to generate a new irregular shape and perform border algorithm to create a random track
 
-    System to detect borders
+    System to detect borders - DONE
         Potentially a radar (expanding circle based)
             Circle of fixed radius, origin at agent midpoint
                 Obtains all border coordinates within the radius of the circle
@@ -60,7 +60,7 @@ Environment
             Any line which didn't hit a border gets an empty vector (value may change based on training)
 
 
-    Prevent "Back Tracking" - ON HOLD   (Potentially unnecessary)
+    Prevent "Back Tracking" - ON HOLD   (Unnecessary feature)
         This will prevent agent going back on itself
         Creates an "invisible" border behind itself, so it cannot travel to a point it has already come from
         Do this by drawing a line from
