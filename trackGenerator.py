@@ -85,6 +85,24 @@ def get_random_points(n, scale, mindst=None, rec=0):
     else:
         return get_random_points(n=n, scale=scale, mindst=mindst, rec=rec+1)
 
+def enlarge(fName):
+    src = cv.imread(fName, cv.IMREAD_UNCHANGED)
+
+    # percent by which the image is resized
+    scale_percent = 150
+
+    # calculate the 50 percent of original dimensions
+    width = int(src.shape[1] * scale_percent / 100)
+    height = int(src.shape[0] * scale_percent / 100)
+
+    # dsize
+    dsize = (width, height)
+
+    # resize image
+    output = cv.resize(src, dsize)
+
+    cv.imwrite('stage2.png', output)
+
 def check_viability(contours):
     if len(contours) > 3:
         #track has loops -> discard
@@ -92,6 +110,16 @@ def check_viability(contours):
         execute()
     else:
         print("successful track")
+
+def check_viability_stage3(fName):
+    img = cv.imread(fName)
+
+    gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    _, threshold = cv.threshold(gray, 127, 255, cv.THRESH_BINARY)
+    contours, _ = cv.findContours(
+        threshold, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+
+    check_viability(contours)
 
 def track_gen(fName):
     img = cv.imread(fName)
@@ -103,16 +131,18 @@ def track_gen(fName):
 
     check_viability(contours)
 
-    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 20)
+    cv.drawContours(img, [contours[1]], 0, (0, 0, 0), 32)
 
-    cv.imwrite('stage2.png', img)
+    cv.imwrite('stage3.png', img)
+
+    check_viability_stage3('stage3.png')
 
 def execute():
     # Tunables ________
-    rad = 0.2
-    edgy = 0.05
-    n = 12
-    scale = 0.8
+    rad = 0.3
+    edgy = 0.04
+    n = 10
+    scale = 0.5
 
     fig, ax = plt.subplots()
     ax.set_aspect("equal")
@@ -123,4 +153,5 @@ def execute():
     plt.plot(x, y)
 
     fig.savefig('stage1.png')
-    track_gen('stage1.png')
+    enlarge('stage1.png')
+    track_gen('stage2.png')

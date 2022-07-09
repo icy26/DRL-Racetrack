@@ -28,7 +28,7 @@ def main():
     FONT = pygame.font.SysFont('Comic Sans', 15)
 
     # Converting to less nested array - faster execution
-    borders = world.get_borders("stage2.png")
+    borders = world.get_borders("stage3.png")
     outsideBorder = borders[0]
     insideBorder = borders[1]
 
