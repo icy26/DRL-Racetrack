@@ -1,4 +1,4 @@
-# CREDIT
+# CREDITS
 # User : ImportanceOfBeingErnest
 # https://stackoverflow.com/questions/50731785/create-random-shape-contour-using-matplotlib
 # Provided bezier algorithm for generating random shapes with tunable parameters
@@ -84,6 +84,8 @@ def get_random_points(n, scale, mindst=None, rec=0):
         return a*scale
     else:
         return get_random_points(n=n, scale=scale, mindst=mindst, rec=rec+1)
+
+#END CREDITS ########
 
 def enlarge(fName):
     src = cv.imread(fName, cv.IMREAD_UNCHANGED)

@@ -36,7 +36,7 @@ Environment
             (car will not be able to stay out for too long as it will
             result in really low score/zeroing out (termination))
 
-    Generate Tracks
+    Generate Tracks - DONE
         Currently using one track
         Implement ways to generate a new irregular shape and perform border algorithm to create a random track
 
