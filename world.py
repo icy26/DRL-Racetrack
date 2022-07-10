@@ -350,13 +350,13 @@ def move(x, y, velocity, quadrantangle, quadrant):
 #endregion
 
 #region radar
-def radar_pulse(surf, agentpos, steerangle):
+def radar_pulse(agentpos, steerangle):
+    #Shoots 5 lines of radarlength from agent. 45degrees apart
     radarlength = 120
 
     #point1 @ 0 degree from steering angle
     quadangle, quad = convert_steeringangle_to_quadrantangle(steerangle)
     endpos1 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    #pygame.draw.line(surf, (255,0,0), agentpos, endpos1)
 
     #point2 @ -45 degrees from steering angle
     if steerangle < 45:
@@ -365,7 +365,6 @@ def radar_pulse(surf, agentpos, steerangle):
         point2angle = steerangle - 45
     quadangle, quad = convert_steeringangle_to_quadrantangle(point2angle)
     endpos2 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos2)
 
     #point3 @ +45 degrees from steering angle
     if steerangle >= 315:
@@ -374,7 +373,6 @@ def radar_pulse(surf, agentpos, steerangle):
         point3angle = steerangle + 45
     quadangle, quad = convert_steeringangle_to_quadrantangle(point3angle)
     endpos3 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos3)
 
     #point 4 @ -90 degrees from steering angle
     if steerangle < 90:
@@ -383,7 +381,6 @@ def radar_pulse(surf, agentpos, steerangle):
         point4angle = steerangle - 90
     quadangle, quad = convert_steeringangle_to_quadrantangle(point4angle)
     endpos4 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos4)
 
     # point 5 @ +90 degrees from steering angle
     if steerangle >= 250:
@@ -392,13 +389,13 @@ def radar_pulse(surf, agentpos, steerangle):
         point5angle = steerangle + 90
     quadangle, quad = convert_steeringangle_to_quadrantangle(point5angle)
     endpos5 = get_angled_line(agentpos, quadangle, quad, radarlength)
-    #pygame.draw.line(surf, (255, 0, 0), agentpos, endpos5)
 
     radarEndPoints = (endpos1, endpos2, endpos3, endpos4, endpos5)
 
     return radarEndPoints
 
 def radar_detect(agentpos, radarEndPoints, outsideBorder, insideBorder):
+    #Finds closest intersection with outside/inside border for each radar line
 
     point1 = radarEndPoints[0]
     point2 = radarEndPoints[1]
@@ -418,19 +415,13 @@ def radar_detect(agentpos, radarEndPoints, outsideBorder, insideBorder):
     return detectionTemp
 
 def get_points_on_line(startpos, endpos, outsideBorder, insideBorder):
+    #Algorithm for outside/inside border intersection detection
     ls = LineString([startpos, endpos])
 
     for f in range(0, int(ls.length) + 1):
         p = ls.interpolate(f).coords[0]
         pArr = (int(p[0]), int(p[1]))
 
-        #Old Algorithm
-        # if any(np.equal(outsideBorder, pArr).all(1)):
-        #     return pArr
-        # elif any(np.equal(insideBorder, pArr).all(1)):
-        #     return pArr
-
-        #New Algorithm
         if -1.0 < cv2.pointPolygonTest(outsideBorder, pArr, True) < 1.0:
             return pArr
         elif -1.0 < cv2.pointPolygonTest(insideBorder, pArr, True) < 1.0:
@@ -450,6 +441,12 @@ def convert_detected_points_to_vector(agentpos, dectectedpoints):
         i+=1
 
     return detectedVectors
+
+def full_radar(agentpos, steerangle, outsideBorder, insideBorder):
+    radarEndPoints = radar_pulse(agentpos, steerangle)
+    detectedPoints = radar_detect(agentpos, radarEndPoints, outsideBorder, insideBorder)
+    return convert_detected_points_to_vector(agentpos, detectedPoints)
+
 #endregion
 
 

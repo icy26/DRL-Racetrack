@@ -30,3 +30,25 @@ Notes
         More
             Secondary score should be weighted less than finishing as finishing is the primary goal
 
+Simple NN Modelling to do
+    Goal is to create a simple DRL NN Model
+    Provisional List
+        This consists of inputs in form of a numpy array
+        Forwards Prop through hidden layers
+        Backwards Prop
+        Loss functions
+        Way to provide model a reward (is this per state or per track attempt)
+        Future possibilities for Q-Learning and other reinforcement learning algorithms
+
+    Collate raw inputs in a numpy array to be passed to the NN Model - DONE
+        Provisional shape of input matrix determined is (6, 2)
+
+    Create spawn loop for model so when track attempt is over (agent completed/died) it spawns in again to a random track
+        Provisionally will spawn to same track as track generation has been excluded for modelling
+        At track completion store results value in a vector (2, 1) -> (score, secondary reward 'distance travelled')
+
+    Create overall simple NN model
+        Determine Input layer - including activation function
+        Determine number of hidden layers
+        Determine how output will execute 2 of six options
+

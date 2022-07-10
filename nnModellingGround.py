@@ -2,7 +2,6 @@ import numpy as np
 import pygame
 from pygame import gfxdraw
 
-import trackGenerator
 import world
 
 #Static Variables
@@ -16,6 +15,21 @@ NAME = 'The Screen'
 
 #Mutable Variables
 score = 1000
+
+def get_raw_inputs(vel, steeringangle, detectedVectors):
+    # 1st Method for Neural Networks
+    # Returns all inputs for the model in a np.array matrix   -> (velocity, steering angle, (detectedVectors))
+    inputs = np.array([
+        [vel, steeringangle],   # velocity  ,  steeringangle
+        [detectedVectors[0][0], detectedVectors[0][1]], # 0degree vector
+        [detectedVectors[1][0], detectedVectors[1][1]], # -45degree vector
+        [detectedVectors[2][0], detectedVectors[2][1]], # 45degree vector
+        [detectedVectors[3][0], detectedVectors[3][1]], # -90degree vector
+        [detectedVectors[4][0], detectedVectors[4][1]], # 90degree vector
+        ])
+    print(inputs)
+    print("shape: "+ str(inputs.shape))
+
 
 def main():
     global score
@@ -68,11 +82,9 @@ def main():
                 running = False
 
             if event.type == pygame.MOUSEBUTTONUP:
-                #world.get_pos()
-                radarEndPoints = world.radar_pulse(screen, agentPos, steeringangle)
-                detectedPoints = world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
-                detectedVectors = world.convert_detected_points_to_vector(agentPos, detectedPoints)
-                print(detectedVectors)
+                # world.get_pos()
+                detectedVectors = world.full_radar(agentPos, steeringangle, outsideBorder, insideBorder)
+                get_raw_inputs(vel, steeringangle, detectedVectors)
 
         keys = pygame.key.get_pressed()
 
@@ -175,5 +187,4 @@ def main():
         pygame.display.update()
 
 if __name__ == '__main__':
-    #trackGenerator.execute()
     main()
