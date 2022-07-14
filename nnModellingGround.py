@@ -3,6 +3,7 @@ import pygame
 from pygame import gfxdraw
 
 import world
+import neuralnetwork
 
 #Static Variables
 BLACK = (0,0,0)
@@ -12,9 +13,6 @@ GREEN = (0,255,0)
 (WIDTH, HEIGHT) = (900, 720)
 BACKGROUND_COLOUR = (245, 225, 169)
 NAME = 'The Screen'
-
-#Mutable Variables
-score = 1000
 
 def get_raw_inputs(vel, steeringangle, detectedVectors):
     # 1st Method for Neural Networks
@@ -27,12 +25,23 @@ def get_raw_inputs(vel, steeringangle, detectedVectors):
         [detectedVectors[3][0], detectedVectors[3][1]], # -90degree vector
         [detectedVectors[4][0], detectedVectors[4][1]], # 90degree vector
         ])
-    print(inputs)
-    print("shape: "+ str(inputs.shape))
 
+    return inputs
 
-def main():
-    global score
+def nn_training_loop(iterations):
+    for i in range(iterations):
+        # trackGenerator.execute()
+        main()
+
+def execute_nn(vel, steeringangle, detectedVectors, neuralN):
+    rawInputs = get_raw_inputs(vel, steeringangle, detectedVectors)
+    print(rawInputs)
+
+    neuralN.inject_inputs(rawInputs)
+    neuralN.get_info()
+
+def main(neuralN):
+    score = 1000
 
     #Build Screen
     pygame.init()
@@ -84,7 +93,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 # world.get_pos()
                 detectedVectors = world.full_radar(agentPos, steeringangle, outsideBorder, insideBorder)
-                get_raw_inputs(vel, steeringangle, detectedVectors)
+                execute_nn(vel, steeringangle, detectedVectors, neuralN)
 
         keys = pygame.key.get_pressed()
 
@@ -187,4 +196,5 @@ def main():
         pygame.display.update()
 
 if __name__ == '__main__':
-    main()
+    nn1 = neuralnetwork.NeuralNetwork((6, 2), 2)
+    main(nn1)

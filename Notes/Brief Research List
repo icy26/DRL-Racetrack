@@ -1,3 +1,4 @@
 https://www.youtube.com/watch?v=zR11FLZ-O9M - Lex Fridman intro to deep reinforcement learning
 https://www.youtube.com/watch?v=wDVteayWWvU - Steve Brunton Overview of Deep Reinforcement Learning Methods
 https://web.stanford.edu/class/aa228/reports/2019/final9.pdf - Research on implementation of DQN model on OpenAIGym Racetrack environment
+https://towardsdatascience.com/epoch-vs-iterations-vs-batch-size-4dfb9c7ce9c9#:~:text=the%20data%20given.-,Epochs,it%20in%20several%20smaller%20batches.  -> Epochs vs Batches vs Iterations

@@ -1,0 +1,19 @@
+
+Single Neural Network object instantiated for entire training set.
+    Provisional shape of model (14/07/2022)
+        1 Input Node
+            Shape (6, 2)
+        Hidden Layer 1
+            Weights - Shape (2, 6)
+            6 Nodes
+        Hidden Layer 2
+            Weights - Shape (6, 6)
+            6 Nodes
+        Output Layer
+            Weights - Shape (6, 2)
+            2 Nodes
+
+Multiplying raw inputs by 0.01 to receive values between -1 -> 1
+    Problem with steering angle being above 100 resulting in greater than 1
+
+Random weights generated. Values 0 -> 1
