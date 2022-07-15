@@ -26,6 +26,10 @@ class NeuralNetwork:
     def inject_inputs(self, inputs):
         self.input = inputs * 0.01
 
+    def summation_forward(self):
+        self.hl1 = activation_relu_hl(np.dot(self.input, self.weights1))
+        self.hl2 = activation_relu_hl(np.dot(self.hl1, self.weights2))
+
     def get_info(self):
         print(self.input)
         print(self.input.shape)
@@ -41,3 +45,9 @@ class NeuralNetwork:
 
         print(self.output)
         print(self.output.shape)
+
+def activation_relu_hl(summation_output):
+    if summation_output > 0:
+        return summation_output
+    else:
+        return 0.0
