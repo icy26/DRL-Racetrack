@@ -1,0 +1,10 @@
+Original approach for Simple MLP (Multilayer Perceptron - Deep Neural Network) scratched
+
+Approach
+    A reinforcement learning algorithm known as Q-Learning to be implemented with a deep neural network - Known as a DQN (Deep Q-Network)
+
+Basics
+    Reinforcement Learning - An model that has access to the agents state (inputs) and actions (outputs)
+                            Based on the state the model must determine the best action for the agent in order to receive a reward
+                            Rewards lead to the agent choosing the action more frequently and an action leading to no reward deters the agent
+                            from making that action in the future

@@ -1,0 +1,28 @@
+AI research & self teaching
+
+    Differentiate between supervised learning & reinforcement learning
+        Supervised learning - learning by example
+            Here are examples. Learn patterns from these examples
+
+        Reinforcement learning - learning by experience
+            Here is an environment. Learn patterns by exploring it
+
+    Understand deep reinforcement learning technique(s) will be needed for this implementation
+        Trial & error system
+        Incorporated with neural networks
+
+    Exploration vs. Exploitation Problem
+        Exploration - An agent that continues to look for higher rewarding combinations/options
+        Exploitation - An agent that determines best reward option quickly and sticks with it
+        Problem - With exploration an agent will never stick with the highest possible rewards and missed out as it constantly looking for better
+                    With exploitation an agent won't check all of its options and sticks to what it thinks is best. May be better alternatives available
+        A compromise between the 2 is required
+
+    Q-Learning
+
+
+
+
+
+
+

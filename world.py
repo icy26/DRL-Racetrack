@@ -452,6 +452,123 @@ def convert_detected_points_to_vector(agentpos, dectectedpoints):
     return detectedVectors
 #endregion
 
+# region agent
+class Agent:
+    def __init__(self, spawn, steeringAngle):
+        self.x = spawn[0]
+        self.y = spawn[1]
+        self.velocity = 0
+        self.steeringAngle = steeringAngle
+        self.observationSpace = None
+
+    def get_observation_state(self, detectedVectors):
+        self.observationSpace = np.array([
+            [self.velocity, self.steeringAngle],  # velocity  ,  steeringangle
+            [detectedVectors[0][0], detectedVectors[0][1]],  # 0degree vector
+            [detectedVectors[1][0], detectedVectors[1][1]],  # -45degree vector
+            [detectedVectors[2][0], detectedVectors[2][1]],  # 45degree vector
+            [detectedVectors[3][0], detectedVectors[3][1]],  # -90degree vector
+            [detectedVectors[4][0], detectedVectors[4][1]],  # 90degree vector
+        ])
+
+        return self.observationSpace
+
+    def action(self, q):
+        # 9 Actions
+        if q == 0:
+            self.deccelerate()
+        elif q == 1:
+            self.deccelerate()
+            self.steer_left()
+        elif q == 2:
+            self.deccelerate()
+            self.steer_right()
+
+        elif q == 3:
+            self. accelerate()
+        elif q == 4:
+            self. accelerate()
+            self.steer_left()
+        elif q == 5:
+            self. accelerate()
+            self.steer_right()
+
+        elif q == 6:
+            self. brake()
+        elif q == 7:
+            self. brake()
+            self.steer_left()
+        elif q == 8:
+            self. brake()
+            self.steer_right()
+
+    def accelerate(self):
+        self.velocity += 0.05
+
+    def deccelerate(self):
+        if self.velocity > 0.025:
+            self.velocity -= 0.025
+        else:
+            self.velocity = 0
+
+    def brake(self):
+        if self.velocity > 0.05:
+            self.velocity -= 0.05
+        else:
+            self.velocity = 0
+
+    def steer_left(self):
+        if self.steeringAngle == 0:
+            self.steeringAngle = 359
+        else:
+            self.steeringAngle -= 2
+
+    def steer_right(self):
+        if self.steeringAngle == 359:
+            self.steeringAngle = 0
+        else:
+            self.steeringAngle += 2
+
+    def move(self, quadrantangle, quadrant):
+        #quadrantangle, quadrant = convert_steeringangle_to_quadrantangle(self.steeringAngle)
+
+        angleRad = math.radians(quadrantangle)
+
+        # Top right quad (moving north east)
+        if quadrant == 0:
+            hypo = self.velocity
+            oppo = math.sin(angleRad) * hypo
+            adj = math.cos(angleRad) * hypo
+
+            self.y -= oppo
+            self.x += adj
+        # Bottom right quad (moving south east)
+        elif quadrant == 1:
+            hypo = self.velocity
+            oppo = math.sin(angleRad) * hypo
+            adj = math.cos(angleRad) * hypo
+
+            self.y += oppo
+            self.x += adj
+        # Bottom left quad (moving south west)
+        elif quadrant == 2:
+            hypo = self.velocity
+            oppo = math.sin(angleRad) * hypo
+            adj = math.cos(angleRad) * hypo
+
+            self.y += oppo
+            self.x -= adj
+        # Top left quad (moving north west)
+        else:
+            hypo = self.velocity
+            oppo = math.sin(angleRad) * hypo
+            adj = math.cos(angleRad) * hypo
+
+            self.y -= oppo
+            self.x -= adj
+
+# end region
+
 
 
 

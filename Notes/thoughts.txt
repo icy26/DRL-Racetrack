@@ -37,3 +37,22 @@
     Reward for
         Completing track in fastest time
 
+Notes
+    How to provide a reward without the agent needing to be finished for faster more effective training
+        Reason
+            Model in current build will only receive a reward for finishing,
+            so until it finishes it won't know what its doing correct and will most likely never finish
+            By providing a secondary reward for every run, the model can adjust for every training iteration
+        Possible Fixes (Form of secondary reward)
+            Time on track
+                The longer the agent stays on track the larger reward it will receive.
+                Problem here is it will learn to just no move until score zeros out to get max reward
+            Distance traveled
+                The further the agent travels the larger reward received
+                This is better as the model will strive for the agent to move further along the track with every iteration
+                Problem may include, agent cheating the system by going back and forth as direction of distance is not implied
+                Hope that naturally agent can get higher score by only moving along track rather than moving along a straight
+                doing a 180 and going back as score will zero out eventually
+        More
+            Secondary score should be weighted less than finishing as finishing is the primary goal
+
