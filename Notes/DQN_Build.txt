@@ -8,3 +8,21 @@ Basics
                             Based on the state the model must determine the best action for the agent in order to receive a reward
                             Rewards lead to the agent choosing the action more frequently and an action leading to no reward deters the agent
                             from making that action in the future
+
+NN Short List
+    Neural Network Architecture (TensorFlow equiv - Model.add) -  DONE
+        Simple Deep NN. Inputs, 2 x hidden layer, output (9 options)
+        Activation functions
+        Forward Prop
+
+    Normalise Data
+        Method to normalise inputs accordingly
+
+    Train functions (TensorFlow equiv - Model.Fit)
+        Calc Loss
+        Backprop
+        Grad Desc
+
+    Model.Fit is called at every state in 'crazy model'
+
+    ...DQN Methods to come...

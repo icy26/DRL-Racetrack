@@ -1,8 +1,37 @@
 import pygame
 import numpy as np
 from pygame import gfxdraw
+import math
+import tensorflow
 
 import world
+
+class Network:
+    def __init__(self, shape):
+        self.weights1 = np.random.rand(shape[1], 6)
+        self.weights2 = np.random.rand(self.weights1.shape[1], 6)
+        self.weights3 = np.random.rand(self.weights2.shape[1], 9)
+
+def forward_step(input, weights, activation):
+    output = np.dot(input, weights)
+
+    if activation == 'relu':
+        return np.maximum(0.0, output)
+
+    elif activation == 'sigmoid':
+        return 1 / (1 + math.exp(-output))
+
+    elif activation == 'linear':
+        if output > 0:
+            return 1
+        else:
+            return 0
+    else:
+        print("No activation")
+        pass
+
+def normalise(tensor):
+    return tensor * 0.01
 
 def main():
     #Static Env Variables
@@ -92,7 +121,26 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    x = np.array([[0, 99],
+                  [29, -53],
+                  [-5, -20],
+                  [23, -6],
+                  [-14, -7],
+                  [14, 8]])
+
+    inputs = normalise(x)
+
+    model = Network(inputs.shape)
+    output1 = forward_step(inputs, model.weights1, 'relu')
+    output2 = forward_step(output1, model.weights2, 'relu')
+    output3 = forward_step(output2, model.weights3, 'relu')
+    print(model.weights1)
+    print("###########")
+    print(output2)
+    print("###########")
+    print(output3)
+
+    #main()
 
 
 

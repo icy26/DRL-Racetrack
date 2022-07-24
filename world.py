@@ -473,39 +473,39 @@ class Agent:
 
         return self.observationSpace
 
-    def action(self, q):
+    def action(self, choice):
         # 9 Actions
-        if q == 0:
-            self.deccelerate()
-        elif q == 1:
-            self.deccelerate()
+        if choice == 0:
+            self.decelerate()
+        elif choice == 1:
+            self.decelerate()
             self.steer_left()
-        elif q == 2:
-            self.deccelerate()
+        elif choice == 2:
+            self.decelerate()
             self.steer_right()
 
-        elif q == 3:
+        elif choice == 3:
             self. accelerate()
-        elif q == 4:
+        elif choice == 4:
             self. accelerate()
             self.steer_left()
-        elif q == 5:
+        elif choice == 5:
             self. accelerate()
             self.steer_right()
 
-        elif q == 6:
+        elif choice == 6:
             self. brake()
-        elif q == 7:
+        elif choice == 7:
             self. brake()
             self.steer_left()
-        elif q == 8:
+        elif choice == 8:
             self. brake()
             self.steer_right()
 
     def accelerate(self):
         self.velocity += 0.05
 
-    def deccelerate(self):
+    def decelerate(self):
         if self.velocity > 0.025:
             self.velocity -= 0.025
         else:
