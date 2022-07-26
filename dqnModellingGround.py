@@ -1,37 +1,29 @@
+import sys
+
 import pygame
-import numpy as np
 from pygame import gfxdraw
-import math
-import tensorflow
+
+import numpy as np
+import tensorflow.keras
+import pandas as pd
+import sklearn as sk
+import tensorflow as tf
 
 import world
 
-class Network:
-    def __init__(self, shape):
-        self.weights1 = np.random.rand(shape[1], 6)
-        self.weights2 = np.random.rand(self.weights1.shape[1], 6)
-        self.weights3 = np.random.rand(self.weights2.shape[1], 9)
-
-def forward_step(input, weights, activation):
-    output = np.dot(input, weights)
-
-    if activation == 'relu':
-        return np.maximum(0.0, output)
-
-    elif activation == 'sigmoid':
-        return 1 / (1 + math.exp(-output))
-
-    elif activation == 'linear':
-        if output > 0:
-            return 1
-        else:
-            return 0
-    else:
-        print("No activation")
-        pass
-
-def normalise(tensor):
-    return tensor * 0.01
+# class DQNAgent:
+#     def create_model(self):
+#         # Define Sequential model with 3 layers
+#         model = keras.Sequential(
+#             [
+#                 layers.Dense(2, activation="relu", name="layer1"),
+#                 layers.Dense(3, activation="relu", name="layer2"),
+#                 layers.Dense(4, name="layer3"),
+#             ]
+#         )
+#         # Call model on a test input
+#         x = tf.ones((3, 3))
+#         y = model(x)
 
 def main():
     #Static Env Variables
@@ -90,7 +82,6 @@ def main():
             ag1.move(quadrantangle, quadrant)
 
             ev = pygame.event.get()
-
             for event in ev:
                 if event.type == pygame.QUIT:
                     running = False
@@ -121,26 +112,18 @@ def main():
 
 
 if __name__ == '__main__':
-    x = np.array([[0, 99],
-                  [29, -53],
-                  [-5, -20],
-                  [23, -6],
-                  [-14, -7],
-                  [14, 8]])
+    print(f"Tensor Flow Version: {tf.__version__}")
+    print(f"Keras Version: {tensorflow.keras.__version__}")
+    print()
+    print(f"Python {sys.version}")
+    print(f"Pandas {pd.__version__}")
+    print(f"Scikit-Learn {sk.__version__}")
+    gpu = len(tf.config.list_physical_devices('GPU')) > 0
+    print("GPU is", "available" if gpu else "NOT AVAILABLE")
 
-    inputs = normalise(x)
+    print("working")
 
-    model = Network(inputs.shape)
-    output1 = forward_step(inputs, model.weights1, 'relu')
-    output2 = forward_step(output1, model.weights2, 'relu')
-    output3 = forward_step(output2, model.weights3, 'relu')
-    print(model.weights1)
-    print("###########")
-    print(output2)
-    print("###########")
-    print(output3)
-
-    #main()
+    main()
 
 
 

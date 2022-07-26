@@ -34,7 +34,6 @@ def main():
 
     #Initialise start, finish & deadzone coords line coordinates
     startCoords, finishCoords, deadzoneCoords = world.generate_start_finish(outsideBorder, insideBorder)
-
     #Get Spawn location for agent based on midpoint of startCoords
     spawn = world.get_spawn(startCoords)
     x, y = spawn[0], spawn[1]
@@ -175,5 +174,5 @@ def main():
         pygame.display.update()
 
 if __name__ == '__main__':
-    #trackGenerator.execute()
+    # trackGenerator.execute()
     main()
