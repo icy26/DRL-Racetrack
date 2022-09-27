@@ -5,13 +5,14 @@ import pygame
 import random as rand
 from scipy.spatial import distance
 from shapely.geometry import LineString, Point, Polygon
+from pygame import gfxdraw
 
 def get_pos():
     pos = pygame.mouse.get_pos()
     print(pos)
     return (pos)
 
-#region track intialisation
+# region track intialisation
 def get_borders(image):
     img = cv2.imread(image)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -51,7 +52,7 @@ def contours_to_array(contours):
 def generate_start_finish(out_ctr, in_ctr):
     #Picks random point from outside border
     rng = out_ctr.shape[0]
-    index = rand.randint(0, rng)
+    index = rand.randint(0, rng-1)
     coord = out_ctr[index]
     sx1, sy1 = coord[0], coord[1]
 
@@ -94,9 +95,9 @@ def get_spawn(coords):
     sy = (p1[1] + p2[1]) / 2
 
     return (sx, sy)
-#endregion
+# endregion
 
-#region angles+quadrants
+# region angles+quadrants
 def convert_steeringangle_to_quadrantangle(steerangle):
     if 0 <= steerangle < 90:
         quadrant = 0
@@ -232,7 +233,7 @@ def generate_perpendicular(point1, point2, startCoords, deadzoneCoords):
         perp = point1 - (10 * b)
 
     return perp
-#endregion
+# endregion
 
 #region environment checks
 #Check finish
@@ -350,7 +351,7 @@ def move(x, y, velocity, quadrantangle, quadrant):
 #endregion
 
 #region radar
-def radar_pulse(surf, agentpos, steerangle):
+def radar_pulse(agentpos, steerangle):
     radarlength = 120
 
     #point1 @ 0 degree from steering angle
@@ -413,7 +414,6 @@ def radar_detect(agentpos, radarEndPoints, outsideBorder, insideBorder):
     point4Detection = get_points_on_line(agentpos, point4, outsideBorder, insideBorder)
     point5Detection = get_points_on_line(agentpos, point5, outsideBorder, insideBorder)
 
-
     detectionTemp = (point1Detection, point2Detection, point3Detection, point4Detection, point5Detection)
     return detectionTemp
 
@@ -450,6 +450,13 @@ def convert_detected_points_to_vector(agentpos, dectectedpoints):
         i+=1
 
     return detectedVectors
+
+def radar(agentpos, steerangle, outsideBorder, insideBorder):
+    radarEndPoints = radar_pulse(agentpos, steerangle)
+    dectectedpoints = radar_detect(agentpos, radarEndPoints, outsideBorder, insideBorder)
+    detectedVectors = convert_detected_points_to_vector(agentpos, dectectedpoints)
+
+    return detectedVectors
 #endregion
 
 # region agent
@@ -460,16 +467,28 @@ class Agent:
         self.velocity = 0
         self.steeringAngle = steeringAngle
         self.observationSpace = None
+        self.oldx = 0
+        self.oldy = 0
 
     def get_observation_state(self, detectedVectors):
+        # self.observationSpace = np.array([
+        #     [self.velocity, self.steeringAngle],  # velocity  ,  steeringangle
+        #     [detectedVectors[0][0], detectedVectors[0][1]],  # 0degree vector
+        #     [detectedVectors[1][0], detectedVectors[1][1]],  # -45degree vector
+        #     [detectedVectors[2][0], detectedVectors[2][1]],  # 45degree vector
+        #     [detectedVectors[3][0], detectedVectors[3][1]],  # -90degree vector
+        #     [detectedVectors[4][0], detectedVectors[4][1]],  # 90degree vector
+        # ])
+
         self.observationSpace = np.array([
-            [self.velocity, self.steeringAngle],  # velocity  ,  steeringangle
-            [detectedVectors[0][0], detectedVectors[0][1]],  # 0degree vector
-            [detectedVectors[1][0], detectedVectors[1][1]],  # -45degree vector
-            [detectedVectors[2][0], detectedVectors[2][1]],  # 45degree vector
-            [detectedVectors[3][0], detectedVectors[3][1]],  # -90degree vector
-            [detectedVectors[4][0], detectedVectors[4][1]],  # 90degree vector
+            self.velocity, self.steeringAngle,  # velocity  ,  steeringangle
+            detectedVectors[0][0], detectedVectors[0][1],  # 0degree vector
+            detectedVectors[1][0], detectedVectors[1][1],  # -45degree vector
+            detectedVectors[2][0], detectedVectors[2][1],  # 45degree vector
+            detectedVectors[3][0], detectedVectors[3][1],  # -90degree vector
+            detectedVectors[4][0], detectedVectors[4][1],  # 90degree vector
         ])
+
 
         return self.observationSpace
 
@@ -529,8 +548,11 @@ class Agent:
         else:
             self.steeringAngle += 2
 
-    def move(self, quadrantangle, quadrant):
-        #quadrantangle, quadrant = convert_steeringangle_to_quadrantangle(self.steeringAngle)
+    def move(self):
+        quadrantangle, quadrant = convert_steeringangle_to_quadrantangle(self.steeringAngle)
+
+        self.oldx = self.x
+        self.oldy = self.y
 
         angleRad = math.radians(quadrantangle)
 
@@ -566,8 +588,126 @@ class Agent:
 
             self.y -= oppo
             self.x -= adj
+# endregion
 
-# end region
+# region resets & renders
+
+# Static Env Variables
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+(WIDTH, HEIGHT) = (900, 720)
+BACKGROUND_COLOUR = (245, 225, 169)
+NAME = 'DRL Racetrack'
+
+
+# def buildScreen(self):
+#     pygame.init()
+#     screen = pygame.display.set_mode((WIDTH, HEIGHT))
+#     pygame.display.set_caption(NAME)
+#     screen.fill(BACKGROUND_COLOUR)
+#
+#     return screen
+#
+class Env:
+    def __init__(self):
+        pygame.init()
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption(NAME)
+        self.screen.fill(BACKGROUND_COLOUR)
+
+    def reset(self):
+        # Should call trackgen
+
+        # Converting to less nested array - faster execution
+        borders = get_borders("stage3.png")
+        self.outsideBorder = borders[0]
+        self.insideBorder = borders[1]
+
+        # Initialise start, finish & deadzone coords line coordinates
+        self.startCoords, self.finishCoords, self.deadzoneCoords = generate_start_finish(self.outsideBorder, self.insideBorder)
+
+        # Get Spawn location for agent based on midpoint of startCoords
+        spawn = get_spawn(self.startCoords)
+
+        # Initialise steeringangle
+        spawn = np.array(spawn)
+        point2 = np.array(self.startCoords)
+        steering_angle = int(initialise_steering_angle(spawn, point2[0], self.startCoords, self.deadzoneCoords))
+
+        self.total_reward = 500
+
+        return spawn, steering_angle
+
+    def render(self, agent, mode=False): # , screen, outsideBorder, insideBorder, startCoords, finishCoords, deadzoneCoords, agent_pos, quadrant_angle, quadrant):
+        agent_pos = (agent.x, agent.y)
+        quadrant_angle, quadrant = convert_steeringangle_to_quadrantangle(agent.steeringAngle)
+
+        # If mode is True Draw, defaults to false
+        if mode:
+            self.screen.fill(BACKGROUND_COLOUR)
+
+            # Draw Borders
+            for pair in self.outsideBorder:
+                gfxdraw.pixel(self.screen, pair[0], pair[1], RED)
+
+            for pair in self.insideBorder:
+                gfxdraw.pixel(self.screen, pair[0], pair[1], RED)
+
+            # Draw Start Line
+            pygame.draw.line(self.screen, GREEN, self.startCoords[0], self.startCoords[1])
+            # Draw Finish Line
+            pygame.draw.line(self.screen, BLUE, self.finishCoords[0], self.finishCoords[1])
+            pygame.draw.polygon(self.screen, BLUE, [self.finishCoords[0], self.finishCoords[1], self.deadzoneCoords[1], self.deadzoneCoords[0]], 0)
+            # Draw Dead Zone Line
+            pygame.draw.line(self.screen, RED, self.deadzoneCoords[0], self.deadzoneCoords[1])
+            pygame.draw.polygon(self.screen, RED, [self.deadzoneCoords[0], self.deadzoneCoords[1], self.startCoords[1], self.startCoords[0]], 0)
+            # Draw Agent
+            pygame.draw.circle(self.screen, BLUE, agent_pos, 8)
+            # Draw Direction line (Visual Only)
+            draw_direction_line(self.screen, agent_pos, quadrant_angle, quadrant)
+
+            pygame.display.update()
+
+    def step(self, agent, action, detectedVectors):
+        agent.action(action)
+        agent.move()
+        new_observation = agent.get_observation_state(detectedVectors)
+        reward, done = self.get_reward_done(agent)
+
+        self.total_reward += reward
+
+        return new_observation, reward, done
+
+    def get_reward_done(self, agent):
+        TRACK_COMPLETION_REWARD = 10000
+        LIVE_REWARD = -1
+        MOVE_REWARD = 5
+        BORDER_TOUCH_PENALTY = -10
+        OUT_OF_BOUNDS_PENALTY = -500
+
+        move_dist = math.dist((agent.x, agent.y), (agent.oldx, agent.oldy))
+        # print("x: {} , y: {} , oldx: {} , oldy: {}".format(agent.x, agent.y, agent.oldx, agent.oldy))
+        # print("move: {}".format(move_dist))
+
+        if check_finish((agent.x, agent.y), self.finishCoords, self.deadzoneCoords):
+            return TRACK_COMPLETION_REWARD, True
+        elif check_dead_zone((agent.x, agent.y), self.deadzoneCoords, self.startCoords):
+            return OUT_OF_BOUNDS_PENALTY, True
+        elif check_inner_collision(self.insideBorder, (agent.x, agent.y)) == 1:
+            return OUT_OF_BOUNDS_PENALTY, True
+        elif check_inner_collision(self.insideBorder, (agent.x, agent.y)) == 2:
+            return BORDER_TOUCH_PENALTY + LIVE_REWARD, False
+        elif check_outer_collision(self.outsideBorder, (agent.x, agent.y)) == 1:
+            return OUT_OF_BOUNDS_PENALTY, True
+        elif check_outer_collision(self.outsideBorder, (agent.x, agent.y)) == 2:
+            return BORDER_TOUCH_PENALTY + LIVE_REWARD, False
+        elif move_dist > 0:
+            return MOVE_REWARD, False
+        else:
+            return LIVE_REWARD, False
+# endregion
 
 
 

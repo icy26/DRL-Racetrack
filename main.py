@@ -68,7 +68,7 @@ def main():
 
             if event.type == pygame.MOUSEBUTTONUP:
                 #world.get_pos()
-                radarEndPoints = world.radar_pulse(screen, agentPos, steeringangle)
+                radarEndPoints = world.radar_pulse(agentPos, steeringangle)
                 detectedPoints = world.radar_detect(agentPos, radarEndPoints, outsideBorder, insideBorder)
                 detectedVectors = world.convert_detected_points_to_vector(agentPos, detectedPoints)
                 print(detectedVectors)
